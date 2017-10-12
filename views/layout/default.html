@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+
+    {{! Document Layout}}
+
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <!-- Meta, title, CSS, favicons, etc. -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>Blackbox </title>
+
+    <!-- Bootstrap core CSS -->
+
+    <link rel="stylesheet" href="https://bootswatch.com/yeti/bootstrap.min.css">
+    <link rel="stylesheet" href="public/css/pushy.css">
+    <link rel="stylesheet" href="public/css/demo.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.4/css/select2.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/limonte-sweetalert2/6.10.1/sweetalert2.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/css/toastr.min.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.4/css/select2.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Passion+One">
+    <style>
+        #map-container {
+            width: 100%;
+            z-index: 1;
+        }
+
+        #map {
+            z-index: 1;
+        }
+
+        #divLoading {
+            display : none;
+        }
+
+        #divLoading.show {
+            display : block;
+            position : fixed;
+            z-index: 100;
+            background-image : url('http://loadinggif.com/images/image-selection/3.gif');
+            background-color:#000;
+            opacity : 0.4;
+            background-repeat : no-repeat;
+            background-position : center;
+            left : 0;
+            bottom : 0;
+            right : 0;
+            top : 0;
+        }
+
+        #loadinggif.show {
+            left : 50%;
+            top : 50%;
+            position : absolute;
+            z-index : 101;
+            width : 32px;
+            height : 32px;
+            margin-left : -16px;
+            margin-top : -16px;
+        }
+
+        .box-shadows {
+            box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+        }
+
+        .tooltip-arrow,
+        .red-tooltip + .tooltip > .tooltip-inner {background-color: #e74c3c;}
+        
+        .tooltip-arrow,
+        .green-tooltip + .tooltip > .tooltip-inner {background-color: #1abc9c;}
+
+        #searchDirection {
+            height:37px;
+            background-color: #fff;
+            font-family: Roboto;
+            font-size: 15px;
+            font-weight: 300;
+            margin-left: 12px;
+            padding: 0 11px 0 13px;
+            text-overflow: ellipsis;
+            width: 200px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+            border: 1px solid transparent;
+            border-radius: 2px 0 0 2px;
+            outline: none;
+        }
+        #searchDirection:focus {
+            border-color: #4d90fe;
+        }
+    </style>
+  
+  {{#block "css"}}
+  {{/block}}
+</head>
+<body>
+    <nav class="pushy pushy-left" data-focus="#first-link">	
+        <div class="pushy-content"> 
+            
+            <div class="top-menu" style="background-color: #3498db;">
+
+            <span>
+                <img src="public/img/logo.png" style="width: 120px; height:75px; margin-top:20px !important; margin-left:10px;">
+                <!-- <i style="width:75px; height:75px; margin-top:20px !important; margin-left:20px;" class="fa fa-5x fa-user-circle-o" aria-hidden="true"></i> -->
+            </span>
+            <span>
+                <p style="color:white; margin-top:-60px; margin-left:130px; font-size:15px; text-transform: uppercase;">
+                    admin
+                </p>
+                <p style="color:white; margin-top:-10px; margin-left:130px; font-size:15px; text-transform: uppercase;">
+                    <b>Eduardo Reveco<b>
+                </p>
+            </span>
+            <br>
+    
+            </div>
+            <ul id="pushy-links" style="overflow-y: scroll;">
+                <li class="pushy-link"><a href="/"><i class="fa fa-2x fa-home" aria-hidden="true"></i>&nbsp;&nbsp;&nbsp;&nbsp; HOME</a></li>
+
+            </ul>
+
+            <div style="position:absolute; width:100%; bottom:0px; padding:0px;">   
+                
+                <center>  
+                    <a href="/logout" class="btn btn-default">
+                        <i class="fa fa-1x fa-power-off" aria-hidden="true"></i>
+                    </a>  
+                    <a href="#" class="btn btn-default" style="margin-left:-5px">
+                        <i class="fa fa-1x fa-cog" aria-hidden="true"></i>
+                    </a>
+                </center>
+                    
+            </div>
+        </div>
+    </nav> 
+
+    {{{content}}}
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.0.3/socket.io.js"></script>
+    <script src="https://code.jquery.com/jquery-1.11.1.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script> 
+    <script src="public/js/pushy.js"></script>
+    <script src="https://code.highcharts.com/highcharts.js"></script>
+    <script src="https://code.highcharts.com/highcharts-more.js"></script>
+    <script src="https://code.highcharts.com/modules/solid-gauge.js"></script>
+    <script src="public/js/highChartsDark.js"></script>	
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.4/js/select2.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/limonte-sweetalert2/6.10.1/sweetalert2.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/js/toastr.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.18.1/moment.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.18.1/locale/es.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.4/js/select2.min.js"></script>
+    <script src="public/js/mapStyles.js"></script>
+    <script src="https://maps.google.com/maps/api/js?key=AIzaSyAzSBp9riwBBxtGG_EiS0xFy40hW7buXYo&libraries=places"></script>
+    <script src="public/js/gmaps.js"></script>
+    {{#block "js"}}
+    {{/block}}
+
+</body>
+
+</html>
