@@ -982,7 +982,8 @@ function selectGeozone(geozone_name, geozoneObj) {
 
 	swal({
 		html: `
-		<h3 style="color:white;">Seleccionar patentes autorizadas</h3>
+		<h2 style="color:white;">${geozone_name}</h2>
+		<h4 style="color:white;">Seleccionar patentes autorizadas</h4>
         <br>
 		<select placeholder="Seleccione las patentes autorizadas" style="width:200px" id="multipleSelector" multiple="multiple">
 			${inGeoPatents}
@@ -999,12 +1000,14 @@ function selectGeozone(geozone_name, geozoneObj) {
 		var geoPatents = $('#multipleSelector').val();
 
 		$.ajax({
-			url: '/api/geozones/setGeoZonePatents',
+			url: '/api/geozones/setGeozonePatents',
 			type: 'POST',
 			data: { name: geozone_name, patents: JSON.stringify(geoPatents) }
 		})
 		.done(function(data) {
-			console.log(data);
+			if (data.ok) {
+				toastr.success('Geozona "'+geozone_name+'" Modificada correctamente');
+			}
 		})
 		.fail(function() {
 			console.log("error modificando geozona");

@@ -148,7 +148,7 @@ const geozones = [
 */ 
 {
     method: 'POST',
-    path: '/api/setGeoZonePatents',
+    path: '/api/geozones/setGeozonePatents',
     config: {
         handler: (request, reply) => {
             let db_geo = couch+'trafyco_geozones/_find';
