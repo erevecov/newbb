@@ -1,0 +1,682 @@
+{{!< layout/default}}
+{{#extend "css"}}
+<style>
+	.btn span.glyphicon {    			
+		opacity: 0;				
+	}
+	.btn.active span.glyphicon {				
+		opacity: 1;				
+	}
+  .btn-circle {
+    width: 30px;
+    height: 30px;
+    text-align: center;
+    padding: 6px 0;
+    font-size: 12px;
+    line-height: 1.428571429;
+    border-radius: 15px;
+  }
+  .btn-circle.btn-lg {
+    width: 50px;
+    height: 50px;
+    padding: 13px 13px;
+    font-size: 18px;
+    line-height: 1.33;
+    border-radius: 25px;
+  }
+</style>
+{{/extend}}
+
+<div id="container" style="position:relative;">
+	
+	<table border="0" cellpadding="0" cellspacing="0" width="50%">
+		<!--<img src="../public/images/patent.jpg" border="0" width="117" height="40">-->
+		<select id="search-patent" class="form-control input-lg" ><option value="Seleccionar Patente">Seleccionar patente</option></select>
+	</table>
+	
+  	<!-- Nav tabs -->
+	<ul id="NavPanel" class="nav nav-tabs nav-justified" role="tablist" style="display:none"  >
+	    <li role="presentation" class="active"><a href="#temperature" aria-controls="temperature" role="tab" data-toggle="tab">Temperatura</a></li>
+	    <li role="presentation"><a href="#alcohol" aria-controls="alcohol" role="tab" data-toggle="tab">Alcohol</a></li>
+	    <li role="presentation"><a href="#smoke" aria-controls="smoke" role="tab" data-toggle="tab">Humo</a></li>
+	    <li role="presentation"><a href="#movement" aria-controls="movement" role="tab" data-toggle="tab">Movimiento</a></li>
+	</ul>
+  	<!-- Tab panes -->
+
+  	<div id="FormTemp" class="tab-content" style="display:none">
+  		<div role="tabpanel" class="tab-pane fade in active" id="temperature" >
+    	<br>
+    	<div class="col-md-6">
+    		<h1 class="fa fa-thermometer-half fa-3x">Temperatura </h1>
+    		<tr><td>  <br> </td><td> <br>  </td></tr>
+    		
+				<form>
+		  			<table width="600">
+		  					<div class="row">
+		    				<div class="col-md-4 col-xs-12 col-md-offset-4">
+	      			    		<tr><td>Frecuencia lectura: <br><select id="deviceTempo" class="form-control" style="width:50% !important">
+						  				<option value="1">1min</option>
+						  				<option value="2">2min</option>
+						  				<option value="3">3min</option>
+						  				<option value="4">4min</option>
+						  				<option value="5">5min</option>
+						  				<option value="10">10min</option>
+						  				<option value="20">20min</option>
+						  				<option value="30">30min</option>
+						  				<option value="40">40min</option>
+						  				<option value="50">50min</option>
+						  				<option value="60">60min</option>
+									</select></td><td>
+									
+								</td>
+								</td></tr>
+			    			</div>
+
+			    			<tr><td>  <br> </h1 > </td><td> <br>  </td></tr>
+						    
+			    			<tr><td>   <div class="col-lg-12">
+							    <div class="input-group">
+							      <span class="input-group-addon label-primary">
+							        <input type="checkbox" id="check1">
+							      </span>
+							      <input type="text" class="form-control" id="txtN1Sensor" value="prueba">
+							    </div><!-- /input-group -->
+							</div><!-- /.col-lg-6 --> </h1 > </td><td>  </td></tr>	
+						   <br>
+							<!--<tr><td><b>-30 °C</b><input id="sli1" type="text" class="span2" width="600" value="" data-slider-min="-30" data-slider-max="40" data-slider-step="1" data-slider-value="[-10,20]"/> <b> 40°C</b></td><td> <br>  </td></tr>
+							-->
+							<tr><td> <p>
+  <label for="amount">Limite permitido: </label>
+  <input type="text" id="amount1" readonly style="border:0; color:#3bb3e2; font-weight:bold;">
+</p>
+ 
+<div id="sli1"></div> </td><td> <br>  </td></tr>
+
+							<tr><td>  <br> </td><td> <br>  </td></tr>
+							
+
+				  			<tr><td>   <div class="col-lg-12">
+							    <div class="input-group">
+							      <span class="input-group-addon label-primary">
+							        <input type="checkbox" id="check2" aria-label="...">
+							      </span>
+							      <input type="text" class="form-control" id="txtN2Sensor" value="prueba" >
+							    </div><!-- /input-group -->
+							</div><!-- /.col-lg-6 --> </h1 > </td><td>  </td></tr>	
+						   <!--
+							<tr><td><b>-30 °C</b><input id="sli2" type="text" class="span2" value="" data-slider-min="-30" data-slider-max="40" data-slider-step="1" data-slider-value="[-10,20]"/> <b> 40°C</b></td><td> <br>  </td></tr>
+							-->
+														<tr><td> <p>
+  <label for="amount">Limite permitido: </label>
+  <input type="text" id="amount2" readonly style="border:0; color:#3bb3e2; font-weight:bold;">
+</p>
+ 
+<div id="sli2"></div> </td><td> <br>  </td></tr>
+
+							<tr><td>  <br> </td><td> <br>  </td></tr>
+							<!--////////////////////////////////////////////////////////////////////////////////////////////////// -->
+				  			<tr><td>  <h1 class="fa fa-star-o fa-3x">  Acciones</h1 > </td><td> <br>  </td></tr>
+				  			<tr><td>  <br> </h1 > </td><td> <br>  </td></tr>
+
+							<tr><td>   <div class="col-lg-12">
+							    <div class="input-group">
+							      <span class="input-group-addon label-warning">
+							        <input type="checkbox" id="checkAlarmMonitor" aria-label="...">
+							      </span>
+							      <input type="text" class="form-control" id="txtAmonitor" value="Alarma Monitor" disabled>
+							    </div>
+							</div></h1 > </td><td>  </td></tr>	
+
+							<tr><td>   <div class="col-lg-12">
+							    <div class="input-group">
+							      <span class="input-group-addon label-warning">
+							        <input type="checkbox" id="checkAlarmTruck">
+							      </span>
+							      <input type="text" class="form-control" id="txtAtruck" value="Alarma en Camion" disabled>
+							    </div>
+							</div></h1 > </td><td>  </td></tr>
+
+							<tr><td>   <div class="col-lg-12">
+							    <div class="input-group">
+							      <span class="input-group-addon label-warning">
+							        <input type="checkbox" id="checkAlarmEmail">
+							      </span>
+							      <input type="text" class="form-control" id="txtAemail" value="Alarma via Email" disabled>
+							    </div>
+							</div></h1 > </td><td>  </td></tr>
+
+							<table id="GridUsers" class="display" cellspacing="0" width="100%"  >
+						        <thead>
+						            <tr>
+						            	<th style="display:none">id</th>
+						            	<th style="display:none">rev</th>
+						                <th>Nombres</th>
+						                <th>Email</th>
+						            </tr>
+						        </thead>
+
+						        <tfoot>
+						            <tr>
+						            	<th style="display:none">id</th>
+						            	<th style="display:none">rev</th>
+						                <th>Nombres</th>
+						                <th>Email</th>
+						            </tr>
+						        </tfoot>
+				    		</table>
+			        </table>
+		    	</form>
+	      	</div>
+    	</div>
+    	<button type="button" id="btnGuardar" value="Nuevo" class="btn btn-success fa fa-1x fa-file-o btn-block" onclick=Guardar() > Guardar</button>
+    	<!--<button type="button" id="btnLimpiar" value="Nuevo" class="btn btn-warning fa fa-1x fa-file-o btn-block" onclick=Limpiar() > Limpiar</button>
+    	-->
+	</div>
+  			
+	<div class="col-md-3">
+
+	</div>
+
+	<div class="col-md-3">
+			
+	</div>
+
+   	<center><div id="tempRange" ></div></center>
+	<br>
+    </div>
+
+    <div role="tabpanel" class="tab-pane fade" id="alcohol">
+    	
+    </div>
+
+    <div role="tabpanel" class="tab-pane fade" id="smoke">
+    	
+    </div>
+
+    <div role="tabpanel" class="tab-pane fade" id="movement">
+    	
+    </div>
+
+  </div>
+
+</div>
+
+
+{{#extend "js"}}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/core-js/2.4.1/core.js"></script>
+<script>
+/////////////////////////////////////////////////////
+///variables globales 
+
+var JSonDevices={}
+var globalPatent=''  //levanta la patente seleccionada
+var datatable;
+var IDSensor1=""
+var IDSensor2=""
+var PrimaryID=""  	//utilizados para eliminar registros
+var PrimaryRev=""	//utilizado para eliminar registros
+var MegaJson=""		//crea el json cuando se va guardar, segun datos de la web
+var QtyTemps=0		//cantidad de temperaturas
+
+/*  $( function() {
+
+    $( "#amount" ).val( "$" + $( "#slider-range" ).slider( "values", 0 ) +
+      " - $" + $( "#slider-range" ).slider( "values", 1 ) );
+  } );
+*/
+$(document).ready(function() {
+    $( "#slider-range" ).slider({
+	      range: true,
+	      min: -30,
+	      max: 30,
+	      values: [ 0, 15 ],
+	      slide: function( event, ui ) {
+	        $( "#amount" ).val( "$" + ui.values[ 0 ] + " - $" + ui.values[ 1 ] );
+	      }
+    });
+
+    $( "#amount" ).val( $( "#slider-range" ).slider( "values", 0 ) + "°C  " + $( "#slider-range" ).slider( "values", 1 ) + "°C  " );
+
+	var allPatents = [];
+	// inicializar de sliders
+	$("#sli1").slider({});
+	$("#sli2").slider({});
+	//inicializo desabilitados
+	document.getElementById("txtN1Sensor").disabled=true
+	$('#sli1').slider('disable')
+	document.getElementById("txtN2Sensor").disabled=true
+	$('#sli2').slider('disable')
+
+	//chekeados
+
+	$("#checkAlarmEmail").removeClass("active")
+	$("#GridUsers").fadeOut("slow")
+
+	////////////////////////////////////////////////////
+	//mostrar usuarios del sistema
+
+    $.ajax({ 
+		url: '/api/getUserX',
+		type: 'GET'
+	})
+	.done(function(data) {
+			var NomApell= "";
+			var final="[";
+			//construccion del json! final para luego meterlo en obj ;)
+			for (var i in data) {
+					NomApell='{"_id":"' + data[i]['_id'] + '","_rev":"' + data[i]['_rev'] + '", "nombre":"' + data[i]['name'] + ' ' + data[i]['lastname'] + '","Email":"'+ data[i]['_id']+'"},'
+					final =final.concat(NomApell)
+			}
+			final = final.slice(0,-1)
+			final+="]"
+
+			var obj = JSON.parse(final);
+			//console.log(obj)
+
+			datatable = $('#GridUsers').dataTable({
+                "bAutoWidth" : false,
+                "aaData" : obj,
+            	"columns" : [ 
+            		{"data" : "_id"}, 
+            		{"data" : "_rev"},
+                    {"data" : "nombre"},
+                    {"data" : "_id"}
+
+                    //{"data" : "password"}
+        		],
+    		"columnDefs": [
+            	{"targets": [ 0,1 ],
+                 "visible": false,
+                 "searchable": false},
+        		],
+    		"select":
+    			{style: 'multiple'},
+    			"paging":   false,
+		        "ordering": true,
+		        "info":     false
+		})
+	})
+	.fail(function() {
+		console.log("error al obtener users");
+	});
+	////////////////////////////////////////////////////
+	// Cargar patentes en el buscador de patentes
+	$.ajax({ 
+		url: '/api/getPatents',
+		type: 'GET',
+		beforeSend: function(){
+			$('#loading').append('<img src="/public/images/loading3.gif" height=100 width=100>');
+		}
+	})
+	.done(function(data) {
+		for (var i = 0; i < data.length; i++) {
+		  allPatents.push({id: i, text: data[i]});
+		}
+
+		$("#search-patent").select2({
+		  allowClear: true,
+		  placeholder: "Seleccione una patente",
+		  data: allPatents
+		});
+		$('#loading').empty();// desaparece
+	})
+	.fail(function() {
+		console.log("error al obtener patentes");
+	});
+
+	//chargeContent($("#search-patent option:selected").text());
+	///////////////////////evento click en las patentes
+	$('#search-patent').on('change', function() {
+  		globalPatent = $("#search-patent option:selected").text();
+  		patent = $("#search-patent option:selected").text();
+  		$("#FormTemp").show()
+  		$("#NavPanel").show()
+
+  		//alert(globalPatent);
+  			$.ajax({
+    			url: '/api/getDevice',
+    			type: 'POST',
+    			data: {patent},
+    			beforeSend: function(){
+				}
+   			})
+    		.done(function(data) {
+    			JSonDevices = data[0]
+    			MostrarJson()
+    		})
+    		.fail(function() {
+   			});
+	});
+
+	//enable o disable elementos segun check1
+	$('#check1').on('click', function() {
+	    if( $(this).is(':checked') ){
+	        document.getElementById("txtN1Sensor").disabled=false
+			$('#sli1').slider('enable')
+	    } else {
+			document.getElementById("txtN1Sensor").disabled=true
+			$('#sli1').slider('disable')
+	    }
+	});
+	//enable o disable elementos segun check2
+	$('#check2').on('click', function() {
+	    if( $(this).is(':checked') ){
+	        document.getElementById("txtN2Sensor").disabled=false
+			$('#sli2').slider('enable')
+	    } else {
+			document.getElementById("txtN2Sensor").disabled=true
+			$('#sli2').slider('disable')
+	    }
+	});
+	//enable o disable gridusuarios
+		$('#checkAlarmEmail').on('click', function() {
+	    if( $(this).is(':checked') ){
+	        $("#GridUsers").fadeIn("slow")
+	    } else {
+			$("#GridUsers").fadeOut("slow")
+	    }
+	});
+});
+	
+
+function MostrarTemps(temps){
+	///////////////////////con un solo 1 sensor de temperatura
+	//console.log(temps)
+	if (temps==1){
+		if(JSonDevices["device"]["temp"][0]["active"]==true){
+			$('#check1').prop('checked', true);
+			document.getElementById("txtN1Sensor").disabled=false
+			$('#sli1').slider('enable')
+		}else{
+			$('#check1').prop('checked', false);
+			document.getElementById("txtN1Sensor").disabled=true
+			$('#sli1').slider('disable')
+		}
+		////////temperaturas////////////
+		document.getElementById("txtN1Sensor").value = JSonDevices["device"]["temp"][0]["name"]
+		IDSensor1=JSonDevices["device"]["temp"][0]["file"]
+		CambiaSlider("#sli1", JSonDevices["device"]["temp"][0]["min"], JSonDevices["device"]["temp"][0]["max"], "#amount1")
+  	}
+  	///////////////////////con un 2 sensorres de temperatura
+  	if (temps==2){
+  		if(JSonDevices["device"]["temp"][0]["active"]==true){
+			//$("#check1").addClass("active")
+			$('#check1').prop('checked', true);
+			document.getElementById("txtN1Sensor").disabled=false
+			$('#sli1').slider('enable')
+		}else{
+			//$("#check1").removeClass("active")
+			$('#check1').prop('checked', false);
+			document.getElementById("txtN1Sensor").disabled=true
+			$('#sli1').slider('disable')
+		}
+	    if(JSonDevices["device"]["temp"][1]["active"]==true){
+			//$("#check2").addClass("active")
+			$('#check2').prop('checked', true);
+			document.getElementById("txtN2Sensor").disabled=false
+			$('#sli2').slider('enable')
+		}else{
+			//$("#check2").removeClass("active")
+			$('#check2').prop('checked', false);
+			document.getElementById("txtN2Sensor").disabled=true
+			$('#sli2').slider('disable')
+		}
+		///////////temperaturas/////////////
+		document.getElementById("txtN1Sensor").value = JSonDevices["device"]["temp"][0]["name"]
+		IDSensor1=JSonDevices["device"]["temp"][0]["file"]
+		CambiaSlider("#sli1", JSonDevices["device"]["temp"][0]["min"], JSonDevices["device"]["temp"][0]["max"], "#amount1")
+		
+		document.getElementById("txtN2Sensor").value = JSonDevices["device"]["temp"][1]["name"]
+		IDSensor2=JSonDevices["device"]["temp"][1]["file"]
+		CambiaSlider("#sli2",JSonDevices["device"]["temp"][1]["min"],JSonDevices["device"]["temp"][1]["max"], "#amount2")
+  	}
+  	if(temps>2){
+  		console.log("existen mas sensores de temperatura =O!" + temps)
+  	} //funcion muestra limites y nombres segun cantidad de temperaturas de cada camion
+
+}
+function MostrarJson(){
+	Limpiar()
+
+
+	//////segun json se activa o se deja asi no mas ;)
+	if(JSonDevices["sendemail"]==true){
+		$('#checkAlarmEmail').prop('checked', true);
+		$("#GridUsers").fadeIn("slow")
+	}else{
+		$("#GridUsers").fadeOut("slow")
+	}
+	if(JSonDevices["soundAlarmInTruck"]==true){
+		//$("#checkAlarmTruck").addClass("active")
+		$('#checkAlarmTruck').prop('checked', true);
+	}
+	if(JSonDevices["soundAlarmInmonitor"]==true){
+		//$("#checkAlarmMonitor").addClass("active")
+		$('#checkAlarmMonitor').prop('checked', true);
+	}
+
+
+
+	//asigno valores a los campos
+	//console.log(JSonDevices["device"]["readtime"]/ 60) 
+	$('#deviceTempo').val(JSonDevices["device"]["readtime"] / 60).trigger('change');
+	/////////id y revision para eliminar 
+	PrimaryID=JSonDevices["_id"]
+	PrimaryRev=JSonDevices["_rev"]
+
+	QtyTemps=JSonDevices["device"]["temp"].length
+
+	MostrarTemps(QtyTemps)
+	//console.log("---------------------------------------")
+
+
+	//////recorrer table para destacar los emilios existentes///////
+	$('#GridUsers tr').each(function(index, element){
+		var Emilio = $(element).find("td").eq(1).html()
+		//comienzo a recorrer el json para ver las coincidencias
+		JSonDevices["emails"].forEach(function(email) {
+			if(Emilio==email){
+				$(element).toggleClass('selected');
+			}
+		})
+	
+	});
+
+}
+function CreaDeviceJson(sensores){
+	var contador = 0;
+	var readtime = $('#deviceTempo').val() * 60					//tiempo de sleep
+	/////////////////////////////////////////////////////////////////////////////
+	////////////////verifico los checks
+	var stateCheck1 = false
+	var stateCheck2 = false
+	var stateCheckAMonitor = false
+	var stateCheckATruck = false
+	var stateCheckAEmail = false
+
+	MegaJson=""
+	if( $("#check1").is(':checked') ){
+	 	stateCheck1=true
+	}
+	if( $("#check2").is(':checked') ){
+	 	stateCheck2=true
+	}
+	if( $("#checkAlarmMonitor").is(':checked') ){
+	 	stateCheckAMonitor=true
+	}
+	if( $("#checkAlarmTruck").is(':checked') ){
+	 	stateCheckATruck=true
+	}
+	if( $("#checkAlarmEmail").is(':checked') ){
+	 	stateCheckAEmail=true
+	}
+	console.log('check1: ' + stateCheck1)
+	console.log('check2: ' + stateCheck2)
+	console.log('Sensores: ' + sensores)
+	/////////////////////////////con un sensor
+	//if(sensores==1){
+	if(stateCheck1==true && stateCheck2==false){
+		console.log('un solo sensor =O')
+		var SenN1 = document.getElementById("txtN1Sensor").value 	//nombre Sensor 1
+		//var valSenN1 =$("#sli1").slider('getValue');				//min max Sensor 1
+
+		////////estructura de MEGAJSON devices ;)
+		MegaJson = "{"
+		MegaJson = MegaJson + '"type": "device", "patent": "'+globalPatent+'", "emails": '
+		//levanta los email de las personas seleccionadas
+		MegaJson= MegaJson + "["
+		while(contador < GridUserJson.length){
+			console.log()
+			MegaJson= MegaJson + '"' + GridUserJson[contador]["Email"] + '",'
+			contador++;
+		}
+		MegaJson = MegaJson.substring(0,MegaJson.length-1);
+		MegaJson=MegaJson+'], "sendemail": '+stateCheckAEmail+' , "soundAlarmInmonitor": '+stateCheckAMonitor+', "soundAlarmInTruck": '+stateCheckATruck+','
+
+		MegaJson=MegaJson + '"device": { "readtime": '+readtime+', "temp":[ {"active": '+stateCheck1+', "file": "'+IDSensor1+'", "name": "'+SenN1+'" , "min":  '+$("#sli1").slider("values", 0 )+', "max": '+$("#sli1").slider("values", 1 )+' }]}} '
+	}
+	////////////////////////////con 2 sensores
+	//if (sensores==2){
+	if(stateCheck1==true && stateCheck2==true){
+		console.log('2 sensor (h)')
+		var SenN1 = document.getElementById("txtN1Sensor").value 	//nombre Sensor 1
+		//var valSenN1 =$("#sli1").slider('getValue');				//min max Sensor 1
+		
+		var SenN2 = document.getElementById("txtN2Sensor").value 	//Nombre Sensor 2
+		//var valSenN2 =$("#sli2").slider('getValue');				//min max Sensor 2
+
+		////////estructura de MEGAJSON devices ;)
+		MegaJson = "{"
+		MegaJson = MegaJson + '"type": "device", "patent": "'+globalPatent+'", "emails": '
+		//levanta los email de las personas seleccionadas
+		MegaJson= MegaJson + "["
+		while(contador < GridUserJson.length){
+			console.log()
+			MegaJson= MegaJson + '"' + GridUserJson[contador]["Email"] + '",'
+			contador++;
+		}
+		MegaJson = MegaJson.substring(0,MegaJson.length-1);
+		MegaJson=MegaJson+'], "sendemail": '+stateCheckAEmail+' , "soundAlarmInmonitor": '+stateCheckAMonitor+', "soundAlarmInTruck": '+stateCheckATruck+','
+
+		MegaJson=MegaJson + '"device": { "readtime": '+readtime+', "temp":[ {"active": '+stateCheck1+', "file": "'+IDSensor1+'", "name": "'+SenN1+'" , "min": '+$("#sli1").slider("values", 0 )+', "max": '+$("#sli1").slider("values", 1 )+' }, '
+		MegaJson=MegaJson + '{ "active": '+stateCheck2+', "file": "'+IDSensor2+'", "name": "'+SenN2+'" , "min": '+$("#sli2").slider("values", 0 )+', "max": '+$("#sli2").slider("values", 1 )+' }]}} '
+		console.log(MegaJson)
+	}
+	if(sensores>2){
+		console.log("existen mas de 2 sensores =O!" + sensores)
+	}
+}
+function Guardar(){
+	if($("#search-patent option:selected").text()== "Seleccionar patente"){
+		alert("favor, seleccione patente")
+		$('#search-patent').focus();
+	}else{
+		
+		var table = $('#GridUsers').DataTable();
+		GridUserJson =table.rows('.selected').data()
+		CreaDeviceJson(QtyTemps)
+
+
+		//primero lo elimino y despues lo creo =)
+	   	$.ajax({
+			url: '/api/deleteDevice',
+			type: 'DELETE',
+			data: {PrimaryID, PrimaryRev},
+			beforeSend: function(){
+				$('#loading').append('<img src="/public/images/loading3.gif" height=100 width=100>');
+			}
+		})
+		.done(function(data) {
+			if(data["ok"]==true){
+
+				
+				$.ajax({
+					url: '/api/createDevice',
+					type: 'POST',
+					data:  {test: MegaJson},
+				beforeSend: function(){
+					//
+				}})
+				.done(function(data) {
+					$.notify("Parametros modificados correctamente: " + globalPatent , "success");
+					console.log(data);//creado correctamente
+					console.log("registrado correctamente")
+					createLog("update","se modifico dispositivos del camion " + globalPatent + "", "Devices")
+					
+					$('#loading').empty();// desaparece
+				})
+				.fail(function() {;
+					console.log("error al insertar device");
+					$('#loading').empty();// desaparece
+				});
+			}		
+		})
+		.fail(function() {
+			$.notify("Error al eliminar registro", "danger");
+			$('#loading').empty();// desaparece
+		});
+	}//termina el if seleccionar patente
+}
+
+function CambiaSlider(slider, Xmin, Xmax, amount){
+	
+
+	$(slider).slider({
+      range: true,
+      min: -30,
+      max: 30,
+      values: [ Xmin, Xmax ],
+      slide: function( event, ui ) {
+        $(amount).val(ui.values[ 0 ] + "°C  -  " + ui.values[ 1 ] + "°C ") ;
+      }
+    });
+    $(amount).val($(slider).slider( "values", 0 ) +"°C  -  " + $(slider).slider( "values", 1 ) + "°C" );
+
+
+  	console.log(Xmin)
+	console.log(Xmax)
+	//$(slider).data('slider').min=Xmin;
+	//$(slider).data('slider').max=Xmax;
+	//$(slider).data('slider').value="[" + Xmin + "," + Xmax + "]";
+	//$(slider).data('slider').setValue([Xmin,Xmax],true);
+}
+
+function Limpiar(){
+	//dejamos los controles desabilitados
+	IDSensor1=""
+	IDSensor2=""
+	QtyTemps=0
+
+	//$("#GridUsers").fadeOut("slow")
+	document.getElementById("txtN1Sensor").disabled=true
+	$('#sli1').slider('disable')
+	document.getElementById("txtN2Sensor").disabled=true
+	$('#sli2').slider('disable')
+
+	//limpio los check por defecto vacios
+	$('#check1').prop('checked', false);
+	$('#check2').prop('checked', false);
+	$('#checkAlarmMonitor').prop('checked', false);
+	$('#checkAlarmTruck').prop('checked', false);
+
+	$('#checkAlarmEmail').prop('checked', false);
+	$("#GridUsers").fadeOut("slow")
+
+	////remuevo las selecciones que tenga el datatable
+	$('#GridUsers tbody tr').removeClass('selected');
+
+	///limpio todos los valores 
+	$('#search-patent').val("");
+	$('#deviceTempo').val("10min");
+	document.getElementById("txtN1Sensor").value = ""
+	//CambiaSlider("#sli1", -10, 20)
+	document.getElementById("txtN2Sensor").value = ""
+	//CambiaSlider("#sli2", -10, 20)
+	$( "#amount1" ).val( "0°C  - 0°C  " );
+	$( "#amount2" ).val( "0°C  - 0°C  " );
+
+}
+
+</script>
+
+{{/extend}}
