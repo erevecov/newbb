@@ -9,7 +9,7 @@
     height: 100%;
     top: 0;
     z-index: 9999;
-    background: #353536;
+    background: rgba(0,0,0, 0.92);
     overflow: auto;
     -webkit-overflow-scrolling: touch;
     /* enables momentum scrolling in iOS overflow elements */
@@ -150,14 +150,13 @@
     color:#9898A0;
   }
   
-  li:hover  i{ /* SI DEJASTE LA CAGADA, MIRAR AQUÍ */
-    color:white;
+  li:hover i{ /* SI DEJASTE LA CAGADA, MIRAR AQUÍ */
+    color:#16a085;
   }
  
   .pushy-link:hover {
-    background:rgba(52, 152, 219,1.0);
+    background:#323232;
   }
-  
   
   .pushy-submenu > a,
   .pushy-submenu > button {

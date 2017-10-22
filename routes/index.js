@@ -4,6 +4,7 @@ import couch from '../config/db.js';
 import loginHandler      from './handlers/loginHandler';
 import logoutHandler     from './handlers/logoutHandler';
 import SensorsConfig     from './sensors_config';
+import Charts            from './charts';
 
 // API
 import APIGeozones       from './api/geozones';
@@ -11,6 +12,7 @@ import APISensors        from './api/sensors';
 import APIalertEmail     from './api/alertEmail';
 import APIPatents        from './api/patents';
 import APIDevices        from './api/devices';
+import APIlogTemps       from './api/logTemps';
 
 const Login = {
     method: ["GET", "POST"],
@@ -77,6 +79,7 @@ const Public = {
 const Routes = [].concat(
     Public,
     Home,
+    Charts,
     Index,
     Login,
     Logout,
@@ -85,7 +88,8 @@ const Routes = [].concat(
     APIalertEmail,
     APISensors,
     APIPatents,
-    APIDevices
+    APIDevices,
+    APIlogTemps
 );
 
 export default Routes;

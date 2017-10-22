@@ -1,0 +1,562 @@
+{{!< layout/default}} 
+
+{{#extend "css"}} 
+<style>
+    canvas{ -moz-user-select: none; -webkit-user-select: none; -ms-user-select: none; }
+</style>
+{{/extend}}
+    <div id="container">
+        <a class="menu-btn btn btn-default" style="position: fixed; z-index:3;">
+            <i class="fa fa-2x fa-bars" aria-hidden="true"></i>
+        </a>
+
+        <div id="load"></div>
+
+        <div class="col-md-4 col-sm-6 col-xs-12">
+            <center><i class="fa fa-3x fa-thermometer-full">Visualizar Temperaturas en:</i></center>
+            <br>
+            <br>
+            <fieldset>
+                <label for="radViajando">Viajando</label>
+                <input class="radio" type="radio" name="radio-1" id="radViajando" checked>
+                <label for="radFinalizado">Finalizados</label>
+                <input class="radio" type="radio" name="radio-1" id="radFinalizado">
+                <!--
+                <label for="radPatente">Patente</label>
+                <input class="radio" type="radio" name="radio-1" id="radPatente">
+                -->
+            </fieldset>
+            <br>
+            <br>
+            <!--
+            <i class="fa fa-2x fa-truck">  Seleccione patente</i>
+            <br>
+            <select id="search-patent" class="form-control input-lg" ><option value="Seleccionar Patente">Seleccionar patente</option></select>
+            <br><br><br>
+            -->
+            <h2 class="fa fa-3x fa-ravelry" id="txtViajes">Viajes en transito</h2>
+            <div class="list-group" id="listgroup">
+                <a href="#" class="list-group-item">Viajes en transito</a>
+            </div>
+            <!--
+            <button type="button" id="btnModifi" value="Nuevo" class="btn btn-success fa fa-2x fa-file-o btn-block" onclick=QueMostramos() > test!</button>
+            -->
+            <!--<button type="button" id="btnModal" class="btn btn-primary btn-lg" data-toggle="modal" data-target="#myModal">Launch demo modal</button>
+            -->
+        </div>
+        <div class="col-md-8 col-sm-6 col-xs-12">
+            <center>
+                <div id="loading" style=" z-index: 30001;"></div>
+            </center>
+            <div id="Chart1" style="width: 100%; height: 300px; margin: 0 auto"></div>
+            <br>
+            <br>
+            <div id="Chart2" style="width: 100%; height: 300px; margin: 0 auto"></div>
+            <br>
+            <br>
+            <br>
+        </div>
+       
+
+        <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                        <h4 class="modal-title" id="myModalLabel">Posicion temperatura leida</h4>
+                    </div>
+                    <div class="modal-body row">
+                        <div class="col-md-12">
+                            <div id="mapCli"></div>
+                            <h2 class="fa fa-2x" align="left" id="DetalleTemp"></h2>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+        {{#extend "js"}}
+    
+        <script>
+        var allPatents = [];
+        var globalPatent = '';
+        var devices = {};
+        var JsonTemperaturas = {}
+        var JsonTodosViajes = {}
+        var StrTemp = ""
+        var IntTemp = 0
+        var CountTemp = 0
+    
+        //var ArrMax1=[]
+        //var ArrMin1=[]
+    
+        //var ArrMax2=[]
+        //var ArrMin2=[]
+        /////////////arreglos para los graficos
+        var MatrixRangos1 = []
+        var MatrixRangos2 = []
+        var MatrixTemp1 = []
+        var MatrixTemp2 = []
+        var map;
+        //google.maps.event.addDomListener(window, 'load', initialize);
+        //var ArrTemp1=[]
+        //var ArrTemp2=[]
+    
+        $(document).ready(function() {
+            $(".radio").checkboxradio();
+            //MostrarPatentez()
+            TodosViajes()
+            $('#loading').empty()
+        });
+    
+        function initializeMap(lati, longi) {
+            document.getElementById("mapCli").style.width = "550px"
+            document.getElementById("mapCli").style.height = "400px"
+            var mapCanvas = document.getElementById('mapCli');
+            var mapOptions = {
+                center: new google.maps.LatLng(lati, longi),
+                zoom: 20,
+                mapTypeId: 'satellite',
+                streetViewControl: false
+            }
+            map = new google.maps.Map(mapCanvas, mapOptions)
+        }
+    
+        $('#myModal').on('shown.bs.modal', function() {
+            google.maps.event.trigger(map, "resize");
+        });
+    
+        function addMarker(location) {
+            marker = new google.maps.Marker({
+                position: location,
+                map: map
+            });
+        }
+    
+        $('#radViajando').on("click", function() {
+            txtViajes.innerText = "Viajes en transito"
+            $('#Chart1').empty()
+            //$('#Chart1').css('visibility', 'hidden');
+            $('#Chart2').empty()
+            QueMostramos()
+        });
+        $('#radFinalizado').on("click", function() {
+            txtViajes.innerText = "Viajes Finalizados"
+            $('#Chart1').empty()
+            $('#Chart2').empty()
+            QueMostramos()
+        });
+        /*$('#radPatente').on("click", function(){
+            $('#Chart1').empty()
+            $('#Chart2').empty()
+            QueMostramos()
+        });
+        */
+    
+    
+    
+        function MostrarPatentez() {
+            $.ajax({
+                    url: '/api/getPatents',
+                    type: 'GET',
+                    beforeSend: function() {
+                        $('#loading').append('<img src="/public/img/loading3.gif" height=100 width=100>');
+                    }
+                })
+                .done(function(data) {
+                    for (var i = 0; i < data.length; i++) {
+                        allPatents.push({ id: i, text: data[i] });
+                    }
+    
+                    $("#search-patent").select2({
+                        allowClear: true,
+                        placeholder: "Seleccione una patente",
+                        data: allPatents
+                    });
+                    $('#loading').empty(); // desaparece
+                })
+                .fail(function() {
+                    console.log("error al obtener patentes");
+                });
+        }
+    
+        function TodosViajes() {
+            $.ajax({
+                    url: '/api/LogViajes',
+                    type: 'GET',
+                    beforeSend: function() {
+                        $('#loading').append('<img src="/public/img/loading3.gif" height=100 width=100>');
+                    }
+                })
+                .done(function(data) {
+                    JsonTodosViajes = data
+                    QueMostramos()
+    
+                })
+                .fail(function() {
+                    console.log("error al obtener patentes");
+                });
+        }
+    
+        function Seleccionado(index, id) {
+            //limpio los graficos
+            $('#Chart1').empty()
+            $('#Chart2').empty()
+            //color al seleccionado
+            $('#listgroup a').css('background', '#D7E9F9');
+            $('#listgroup a').css('color', 'black')
+            $('#listgroup' + index).css('background', '#2b6ec6')
+            $('#listgroup' + index).css('color', 'white')
+    
+    
+            var checkboxes = $(".radio").checkboxradio();
+            var inicia = ""
+            var finaliza = ""
+            inicia = id
+            //console.log(id)
+    
+            for (var j in JsonTodosViajes) {
+                if (JsonTodosViajes[j]["_id"] == id) {
+                    if (checkboxes[0]["checked"] == true) { //viajando
+                        finaliza = getTime()
+                        globalPatent = JsonTodosViajes[j]["remolque"]
+                        ObtieneConfigSensor(globalPatent, inicia, finaliza)
+                        break
+                    }
+    
+                    if (checkboxes[1]["checked"] == true) { //finalizado
+                        finaliza = JsonTodosViajes[j]["finaliza"]
+                        globalPatent = JsonTodosViajes[j]["remolque"]
+                        ObtieneConfigSensor(globalPatent, inicia, finaliza)
+                        break
+                    }
+    
+    
+                }
+            }
+        }
+    
+        function QueMostramos() {
+            var checkboxes = $(".radio").checkboxradio();
+            CountTemp = 0
+            var ID = ""
+            var Chofer = ""
+            var txtRemolque = ""
+            var IDFormateado = ""
+            $('#listgroup').empty()
+    
+    
+            if (checkboxes[0]["checked"] == true) { //viajando
+                for (var j in JsonTodosViajes) {
+                    if (JsonTodosViajes[j]["state"] == true) {
+                        ID = JsonTodosViajes[j]["_id"]
+                        IDFormateado = ID.slice(0, 10)
+                        Chofer = JsonTodosViajes[j]["driver"]
+                        txtRemolque = JsonTodosViajes[j]["remolque"]
+                        $('#listgroup').append('<a onclick=Seleccionado(' + CountTemp + ',"' + ID + '") class="list-group-item" id="listgroup' + CountTemp + '" style="background:white;">' + txtRemolque + ' - ' + Chofer + ' - ' + IDFormateado + '</a>')
+                        CountTemp = CountTemp + 1
+                    }
+                }
+                if (CountTemp == 0) {
+                    $('#listgroup').append('<a onclick=Seleccionado() class="list-group-item" id="listgroup' + CountTemp + '" style="background:white;">Sin Viajes activos</a>')
+                }
+            }
+            if (checkboxes[1]["checked"] == true) { //finalizados
+                for (var j in JsonTodosViajes) {
+                    if (JsonTodosViajes[j]["state"] == false) {
+                        ID = JsonTodosViajes[j]["_id"]
+                        IDFormateado = ID.slice(0, 10)
+                        Chofer = JsonTodosViajes[j]["driver"]
+                        txtRemolque = JsonTodosViajes[j]["remolque"]
+                        $('#listgroup').append('<a onclick=Seleccionado(' + CountTemp + ',"' + ID + '") class="list-group-item" id="listgroup' + CountTemp + '" style="background:white;">' + txtRemolque + ' - ' + Chofer + ' - ' + IDFormateado + '</a>')
+                        CountTemp = CountTemp + 1
+                    }
+                }
+            }
+            /*if(checkboxes[2]["checked"]==true ){ //seleccion por patente
+                //console.log("Patente")
+            }
+            */
+            $('#listgroup a').css('background', '#D7E9F9');
+            $('#listgroup a').css('color', 'black')
+    
+        }
+    
+        function ResetChart(idChart) {
+            MatrixDatos = []
+            MatrixRangos = []
+            Highcharts.chart(idname, {
+    
+                title: {
+                    text: ''
+                },
+                subtitle: {
+                    text: ''
+                },
+    
+                xAxis: {
+                    type: 'int'
+                },
+    
+                yAxis: {
+                    title: {
+                        text: 'Temperature (°C)'
+                    }
+                },
+    
+                tooltip: {
+                    crosshairs: true,
+                    shared: true,
+                    valueSuffix: '°C'
+                },
+    
+                legend: {},
+    
+                series: [{
+                    name: 'Temperature',
+                    data: MatrixDatos,
+                    zIndex: 1,
+                    marker: {
+                        fillColor: 'white',
+                        lineWidth: 2,
+                        lineColor: Highcharts.getOptions().colors[0]
+                    }
+                }, {
+                    name: 'Range',
+                    data: MatrixRangos,
+                    type: 'arearange',
+                    lineWidth: 0,
+                    linkedTo: ':previous',
+                    color: Highcharts.getOptions().colors[0],
+                    fillOpacity: 0.3,
+                    zIndex: 0,
+                    marker: {
+                        enabled: false
+                    }
+                }]
+            });
+        }
+    
+        function Graficalo2(idname, titulo, subtitulo, MatrixRangos, MatrixDatos) {
+            Highcharts.chart(idname, {
+    
+                title: {
+                    text: titulo
+                },
+                subtitle: {
+                    text: subtitulo
+                },
+    
+                xAxis: {
+                    type: 'string'
+                },
+    
+                yAxis: {
+                    title: {
+                        text: 'Temperature (°C)'
+                    }
+                },
+    
+                tooltip: {
+                    crosshairs: true,
+                    shared: true,
+                    valueSuffix: '°C'
+                },
+    
+                legend: {},
+    
+                series: [{
+                    name: 'Temperature',
+                    data: MatrixDatos,
+                    zIndex: 1,
+                    marker: {
+                        fillColor: 'white',
+                        lineWidth: 2,
+                        lineColor: Highcharts.getOptions().colors[0]
+                    },
+                    point: {
+                        events: {
+                            click: function() {
+                                //alert('Category: ' + this.category + ', value: ' + this.y);
+                                var lati = JsonTemperaturas[this.category]["latitude"]
+                                var longi = JsonTemperaturas[this.category]["longitude"]
+    
+                                $('#myModal').modal('show');
+    
+                                initializeMap(lati, longi);
+                                var CentralPark = new google.maps.LatLng(lati, longi);
+                                addMarker(CentralPark)
+                                console.log(this)
+                                var strMax = this["series"]["chart"]["series"]["1"]["dataMax"]
+                                var strMin = this["series"]["chart"]["series"]["1"]["dataMin"]
+                                var strDate = this["name"]
+                                strDate = moment(strDate).format('DD MMMM YYYY, h:mm:ss a')
+                                StrTemp = ' <b> Detalle </b><br>Temperatura Leida: ' + this.y + '°C <br> Limites, Max: <b>' + strMax + '°C </b>  Min: <b>' + strMin + '°C </b> <br> ' + strDate
+    
+                                $('#DetalleTemp').html(StrTemp)
+    
+                            }
+                        }
+                    }
+                }, {
+                    name: 'Range',
+                    data: MatrixRangos,
+                    type: 'arearange',
+                    lineWidth: 0,
+                    linkedTo: ':previous',
+                    color: Highcharts.getOptions().colors[0],
+                    fillOpacity: 0.3,
+                    zIndex: 0,
+                    marker: {
+                        enabled: false
+                    }
+                }]
+            });
+    
+        }
+    
+        function ConsultaloPoh(patent, cant, inicia, finaliza) {
+            var countInt = 0
+    
+            $.ajax({
+                    url: '/api/TempLeida2',
+                    type: 'POST',
+                    data: { patent: patent, initDate: inicia, endDate: finaliza },
+                    beforeSend: function() {
+                        $('#loading').append('<img src="/public/img/loading3.gif" height=100 width=100>');
+                    }
+                })
+                .done(function(data) {
+                    JsonTemperaturas = data
+                    StrTemp = ""
+    
+                    MatrixTemp1 = []
+                    MatrixTemp2 = []
+                    for (var j in JsonTemperaturas) {
+                        //console.log(JsonTemperaturas[j]["_id"])  
+                        switch (cant) {
+                            case 1:
+                                StrTemp = JsonTemperaturas[j]["temperature"][0]
+                                StrTemp = JSON.stringify(StrTemp)
+                                StrTemp = StrTemp.replace(/[^0-9.,\s]/gi, '')
+                                IntTemp = parseFloat(StrTemp)
+                                MatrixTemp1.push([JsonTemperaturas[j]["_id"], IntTemp])
+                                break;
+                            case 2:
+                                StrTemp = JsonTemperaturas[j]["temperature"][0]
+                                StrTemp = JSON.stringify(StrTemp)
+                                StrTemp = StrTemp.replace(/[^0-9.,\s]/gi, '')
+                                IntTemp = parseFloat(StrTemp)
+                                MatrixTemp1.push([JsonTemperaturas[j]["_id"], IntTemp])
+    
+                                StrTemp = JsonTemperaturas[j]["temperature"][1]
+                                StrTemp = JSON.stringify(StrTemp)
+                                StrTemp = StrTemp.replace(/[^0-9.,\s]/gi, '')
+                                IntTemp = parseFloat(StrTemp)
+                                MatrixTemp2.push([JsonTemperaturas[j]["_id"], IntTemp])
+                                break;
+                        }
+    
+    
+                    }
+                    $('#loading').empty(); // desaparece
+                })
+                .fail(function() {
+                    console.log("error valores leidos");
+                });
+        }
+    
+        function ObtieneConfigSensor(patent, inicia, finaliza) {
+    
+            MatrixRangos1 = []
+            MatrixRangos2 = []
+    
+            $.ajax({
+                    url: '/api/getDevice',
+                    type: 'POST',
+                    data: { patent: globalPatent },
+                    beforeSend: function() {}
+                })
+                .done(function(data) {
+                    //console.log(data);
+                    if (data[0]) {
+                        devices.temp = data[0].device.temp;
+                        devices.patent = data[0].patent;
+                        devices.device = data[0].device
+                        CountTemp = 0
+                        CountTemp = devices["temp"].length
+    
+                        switch (CountTemp) {
+                            case 1:
+                                var titulo1 = "Patente: " + devices["patent"] + " Sensor:  " + devices["temp"][0]["name"]
+                                var subtitulo1 = "frecuencia de lectura: " + devices["device"]["readtime"] + " seg."
+                                var titulo2 = 'sin registros'
+                                var subtitulo2 = "---"
+    
+                                var min1 = devices["temp"][0]["min"]
+                                var max1 = devices["temp"][0]["max"]
+                                break;
+                            case 2:
+                                var titulo1 = "Patente: " + devices["patent"] + " Sensor:  " + devices["temp"][0]["name"]
+                                var subtitulo1 = "frecuencia de lectura: " + devices["device"]["readtime"] + " seg."
+    
+                                var titulo2 = "Patente: " + devices["patent"] + " Sensor:  " + devices["temp"][1]["name"]
+                                var subtitulo2 = "frecuencia de lectura: " + devices["device"]["readtime"] + " seg."
+    
+                                var min1 = devices["temp"][0]["min"]
+                                var max1 = devices["temp"][0]["max"]
+                                var min2 = devices["temp"][1]["min"]
+                                var max2 = devices["temp"][1]["max"]
+                                break;
+                        }
+                        $('#loading').append('<img src="/public/img/loading3.gif" height=100 width=100>');
+                        ConsultaloPoh(globalPatent, CountTemp, inicia, finaliza)
+                        sleep(1500).then(() => {
+                            //console.log('largoooo: ' + MatrixTemp1.length)
+                            //console.log(JsonTemperaturas)
+                            for (var i = 0; i <= MatrixTemp1.length - 1; i++) {
+                                StrTemp = JsonTemperaturas[i]["_id"]
+                                //console.log(JsonTemperaturas[i]["_id"])
+                                MatrixRangos1.push([StrTemp, min1, max1])
+                                MatrixRangos2.push([StrTemp, min2, max2])
+                            }
+    
+                            switch (CountTemp) {
+                                case 1:
+                                    console.log('rangos')
+                                    console.log(MatrixRangos1)
+                                    console.log('datos')
+                                    console.log(MatrixTemp1)
+                                    Graficalo2('Chart1', titulo1, subtitulo1, MatrixRangos1, MatrixTemp1)
+                                    break;
+                                case 2:
+                                    console.log('rangos')
+                                    console.log(MatrixRangos1)
+                                    console.log('datos')
+                                    console.log(MatrixTemp1)
+                                    Graficalo2('Chart1', titulo1, subtitulo1, MatrixRangos1, MatrixTemp1)
+                                    Graficalo2('Chart2', titulo2, subtitulo2, MatrixRangos2, MatrixTemp2)
+                                    break;
+                            }
+                            $('#loading').empty()
+    
+                        });
+                    } else {
+                        $.notify("La patente " + globalPatent + " No tiene Sensores de temperatura Configurados", "error");
+                        $('#loading').empty()
+                    }
+                })
+                .fail(function() {});
+        }
+    
+        function sleep(time) {
+            return new Promise((resolve) => setTimeout(resolve, time));
+            //asi lo usai ;)
+            //sleep(500).then(() => {
+            //});
+        }
+        </script>
+        {{/extend}}

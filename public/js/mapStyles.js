@@ -169,5 +169,14 @@ var style1 = [
 
 
 var style2 = [
-  
+    {
+        "stylers": [
+        {
+            "saturation": -60
+        },
+        {
+            "lightness": -20
+        }
+        ]
+    }
 ];

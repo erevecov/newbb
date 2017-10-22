@@ -11,50 +11,66 @@
 
     <div id="divLoading"></div>
 
-	<div id="container" style="position:relative;">
-		<a class="menu-btn btn btn-default" style="position: fixed; z-index:3;">
-			<i class="fa fa-3x fa-bars" aria-hidden="true"></i>
+	<div id="container" style="position:relative;"></div>
+		<a class="btn menu-btn box-shadows" style="position: fixed; z-index:3;">
+			<i class="fa fa-2x fa-bars" aria-hidden="true"></i>
 		</a>
 
 		<div id="map-container">
-			<div style="position:fixed; top:0; right:0; z-index:2;">
+			<!--<div style="background:rgba(0, 0, 0, 0.2); width:100%; height:100%; position:fixed; z-index:2; pointer-events: none;"></div>-->
+			
+			<div style="position:fixed; top:0; right:0; z-index:3;">
 				<span style="margin-right:-5px;"><input id="searchDirection" placeholder="Buscar dirección" type="text" class"form-control box-shadows"></span>
-				<span><a id="searchDirectionButton" class="btn btn-default"><i class="fa fa-search" aria-hidden="true"></i></a></span>
+				<span><a id="searchDirectionButton" class="btn btn-blackbox" ><i class="fa fa-search" aria-hidden="true"></i></a></span>
 			</div>
-			<center><div id="patentSelected" class="box-shadows" style="visibility:hidden; z-index:2; position:fixed; left:50%; right:50%; top:0; height: 40px; width:150px; margin-left:-100px; background: white; border-radius:3px; margin-top:40px;"></div></center>
-			<div id="map" style="width: 100%; height: 100%"></div>
-		</div>
-		<!--
-		<button id="toolsMenuButton" style="right:0px; bottom:0px; position:fixed; z-index:3;">
-			<i class="fa fa-angle-double-up fa-4x" aria-hidden="true"></i>
-		</button>
-		-->
+			
+			<div id="map" style="width: 100%; height: 100%; z-index:1;"></div>
 		
-		<div style="background:#353536; position:absolute; width:100%;" id="toolsMenu"></div>
+			<center><div id="patentSelected" class="box-shadows" style="visibility:hidden; z-index:2; position:fixed; left:50%; right:50%; top:0; height: 40px; width:150px; margin-left:-100px; background: rgba(0, 0, 0, 0.8); color: white; border-radius:3px; margin-top:38px;"></div></center>
+			
+			<div style="position:fixed; top:100px; right:50px; z-index:5; display:none;" id="toolsWindow">
+				<div class="blackpanel panel-blackbox">
+					<div class="panel-heading">
+						<span id="blackPanelHeading"></span>
+						<span style="float:right;">
+							<a onclick="cleanBlackPanelAnimation();" class="btn btn-default btn-xs" style="padding-top:1px; padding-bottom:1px;">
+								<i class="fa fa-times" aria-hidden="true"></i>
+							</a>
+						</span>
+					</div>
+					<div class="panel-body" id="blackPanelBody"></div>
+				</div>
+			</div>
+			<div id="tools"></div> 
+		</div>
 		
 	</div>
 
 {{#extend "js"}}
 <script>
 var map;
+var panoramicMap;
 var selectedPatent = '';
 var locks = '';
-var selectedLockStatus = '';
-var chartSpeed;
-var centered = 0;
-var toolsMenu = 0;
+var objectsToRemove = []; // Objetos del mapa a remover
 var showingPatent = 0;
+var centered = 0;
+var panoramicStatus = 0;
+var chartSpeed;
 var trucksData = []; // los datos actuales del camión. ej: { lat: 123, lng: 123, patent: XD123, ... }
 var markersAdd = []; // Las patentes. ej: ["ER1313", "JP4467", "GE1313", ...]
 var markersObj = []; // el objeto de cada marcador agregado
-var allLockStatus = []; // Todos los datos de los de las cerraduras
-var allPatentsSearch = []; // Los objetos de las patentes para el buscador de patente. ej: [{i: 1, text: "ER1313"}, {i:2, text: "GE1313"}, ...]
 var allGeozones = []; // Todas las geozonas con sus datos
 var geozonesAdd = []; // Las geozonas. ej: ["alameda1", "alameda2", "alameda3", ...]
-var allGeozonesSearch = []; 
-var objectsToRemove = []; // Objetos del mapa a remover
-var screenWidth;
-var screenHeight;
+var allGeozonesSearch = [];
+var allLockData = []; // todos los datos de las cerraduras. ej allLockData[ER1313]
+var allLockStatus = []; // Todos los datos de las cerraduras
+var allPatentsSearch = []; // Los objetos de las patentes para el buscador de patente. ej: [{i: 1, text: "ER1313"}, {i:2, text: "GE1313"}, ...]
+var toolsWindowStatus = 0; // estado de la ventana oscura
+var truckMenuStatus = 0; // estado de menu de camión seleccionado
+var toolsMenuStatus = 0; // estado de herramientas generales
+var lockMenuStatus = 0; // estado de la ventana de visualizacion de todas las cerraduras
+
 
 /*
 	Variables para la creación de geozonas
@@ -62,23 +78,33 @@ var screenHeight;
 var creatingGeoZone = 0;
 var creatingGeoPoints = []
 
-$(document).ready(function() {
+$(document).ready(function(){
 	$("div#divLoading").addClass('show');
-	
-	screenWidth = $(window).width();
+
+    screenWidth = $(window).width();
 	screenHeight = $(window).height();
-	$("#map-container").css('height', screenHeight)// - 150) 
-	//loadToolsMenu();
-	
-	
-	map = new GMaps({
+    $("#map-container").css('height', screenHeight)
+
+    map = new GMaps({
 		el: '#map',
 		zoom: 5,
 		lat: -34.987030702,
-		lng: -71.237583160,
-		streetViewControl: false,
-		mapTypeId: google.maps.MapTypeId.ROADMAP,
-		mapTypeControl: true,
+        lng: -71.237583160,
+        streetViewControl: false,
+		mapTypeId: google.maps.MapTypeId.TERRAIN,
+        mapTypeControl: true,
+        styles: [
+        {
+            "stylers": [
+            {
+                "saturation": -60
+            },
+            {
+                "lightness": -20
+            }
+            ]
+        }
+        ],
 		mapTypeControlOptions: {
 			style: google.maps.MapTypeControlStyle.HORIZONTAL_BAR,
 			position: google.maps.ControlPosition.LEFT_BOTTOM
@@ -95,35 +121,13 @@ $(document).ready(function() {
 		click: function(e) { 
 			createGeoPoint(e.latLng.lat().toFixed(9), e.latLng.lng().toFixed(9))
 		}
-	});
+    });
 
-	/* 
-		Buscador de direcciones google
-	*/
-	var input = document.getElementById('searchDirection');
-	var autocomplete = new google.maps.places.Autocomplete(input);
+    var input = document.getElementById('searchDirection');
+    var autocomplete = new google.maps.places.Autocomplete(input);
+    addMapControls();
 
-	map.addControl({
-		position: 'right_bottom',
-		content: `<button id="toolsMenuButton" onclick="toolsMenuFunc()">
-					<i class="fa fa-angle-double-up fa-4x" aria-hidden="true"></i>
-					</button>`,
-		style: {
-			marginBottom: '0px',
-			padding: '1px 6px',
-			fontSize: '20px',
-			fontFamily: 'Passion One,cursive'
-		},
-		events: {
-			/*
-			click: function(){
-			console.log(this);
-			}
-			*/
-		}
-	});
-
-	map.addControl({
+    map.addControl({
 		position: 'right_bottom',
 		content: 'BLACKBOX',
 		id: "socketStatus",
@@ -160,15 +164,15 @@ $(document).ready(function() {
 	});
 	socket.on('connect', function(){
 		$('#socketStatus').css('color', 'green');
-	});
+    });
 
-	/*
+    /*
 		Socket Geozones
 	*/
 	socket.on('geozones', function(data) {
 		data.forEach(function(element, index) {
 			if ((geozonesAdd.indexOf(element.name) == -1)) {
-				var geo = map.drawPolygon({
+				var geoObj = map.drawPolygon({
 					id: element.name,
 					paths: element.poly,
 					strokeColor: element.geoColor,
@@ -205,18 +209,18 @@ $(document).ready(function() {
 						selectGeozone(this.id, this)
 					}
 				});
-
+                
 				allGeozones[element.name] = {
 					id: element.id,
 					geoType: element.geoType,
 					geoColor: element.geoColor,
 					patents: element.patents,
 					poly: element.poly,
-					center: [geo.getBounds().getCenter().lat(), geo.getBounds().getCenter().lng()]
+					center: [geoObj.my_getBounds().getCenter().lat(), geoObj.my_getBounds().getCenter().lng()]
 				}
 				geozonesAdd.push(element.name)
 
-				allGeozonesSearch.push({id: index, text: element.name});
+                allGeozonesSearch.push({id: index, text: element.name});
 			}
 		});
 
@@ -224,37 +228,30 @@ $(document).ready(function() {
 			Buscador de geozonas
 		*/
 		$("#search-geozone").select2({
-			allowClear: true,
-			placeholder: "Seleccione una geozona",
-			data: allGeozonesSearch
-		});
+            allowClear: true,
+            placeholder: "Buscar geozona",
+            data: allGeozonesSearch
+        });
 
-	});
-
-	/*
-		Socket Locks
-	*/
-	socket.on('locks', function(data){
-		allLockStatus = data;
-		getAllLockStatus();
-	})
-
-	/*
+    });
+    
+    /*
 		Socket GPS
 	*/
 	socket.on('gps', function(data){
-		if ($("div#divLoading").hasClass('show')) {
-			$("div#divLoading").removeClass('show');
-		}
-
+		$("div#divLoading").removeClass('show');
 		data.forEach(function(element, index) {
 
 			// Si la patente seleccionada es igual al elemento en bucle
 			if (selectedPatent == element.patent) {
+
+                if ( panoramicStatus == 1 ) {
+                    movePanoramic(trucksData[selectedPatent].lat, trucksData[selectedPatent].lng, trucksData[selectedPatent].track); 
+                }
+
 				var point = chartSpeed.series[0].points[0];
 				var speed = element.speed;
 				point.update(speed);
-
 
 				var dYear = moment(element.time).format('YYYY');
 				var dMonth = moment(element.time).format('MMMM');
@@ -263,17 +260,19 @@ $(document).ready(function() {
 				var dHour = moment(element.time).format('HH');
 				var dMinute = moment(element.time).format('mm');
 				var dSecond = moment(element.time).format('ss');
-				$('#latestDate').html(`
-					<center>
-						<p>Último registro</p>
-						<hr style="border-top: 1px solid #16a085; margin-top:-10px;"/>	
-						<div style="margin-top: -20px;">
-							<h4 style="margin-top: -18px;">${dDayString}</h4>
-							<h2 style="margin-top: -18px;">${dDay}</h2>	
-							<h4 style="margin-top: -15px;">${dMonth}</h4>
-							<h4 style="margin-top: -15px;">${dYear}</h4>
-							<p style="margin-top: -15px;">${dHour}:${dMinute}:${dSecond}</p>
-						</div>
+                $('#latestDate').html(`
+                    <center>
+                        <div style="width:100%; height:140px;">
+                            <p>Último registro</p>
+                            <hr style="border-top: 1px solid #16a085; margin-top:-10px;"/>	
+                            <div style="margin-top: -20px;">
+                                <h4 style="margin-top: -18px;">${dDayString}</h4>
+                                <h2 style="margin-top: -18px;">${dDay}</h2>	
+                                <h4 style="margin-top: -15px;">${dMonth}</h4>
+                                <h4 style="margin-top: -15px;">${dYear}</h4>
+                                <p style="margin-top: -15px;">${dHour}:${dMinute}:${dSecond}</p>
+                            </div>
+                        </div>
 					</center>	
 				`);
 			}
@@ -293,17 +292,33 @@ $(document).ready(function() {
 					optimized: false,
 					animation: google.maps.Animation.DROP,
 					infoWindow: {
-						content: "<b>" + element.patent + "</b>"
+                        content: "<span style='color:black';>" + element.patent + "</span>"
 					},
 					mouseover: function() {
-						this.infoWindow.open(this.map, this);
+                        this.infoWindow.open(this.map, this);
+                        /*
+                        var iwOuter = $('.gm-style-iw');
+                        var iwBackground = iwOuter.prev();
+                        $("div:eq(0)", iwBackground).hide();
+                        $("div:eq(2)", iwBackground).hide();
+                        iwBackground.children(':nth-child(2)').css({'background' : 'rgba(0, 0, 0, 0.8)', 'margin-top':'20px'});
+                        iwBackground.children(':nth-child(4)').css({display: 'none'}); 
+                        var iwCloseBtn = iwOuter.next();
+                        iwCloseBtn.css({opacity: '0', right: '38px', top: '3px', border: '7px solid #48b5e9', 'border-radius': '13px', 'box-shadow': '0 0 5px #3990B9'});
+                        if($('.iw-content').height() < 140){
+                            $('.iw-bottom-gradient').css({display: 'none'});
+                        }
+                        */
+                    },
+                    mouseout: function() {
+						this.infoWindow.close(this.map, this);
 					},
 					click: function() {
-						selectTruck(this, element);
+                        selectTruck(element);
 					}
-				});
+                });
 
-				markersObj[element.patent].infoWindow.open(markersObj[element.patent].map, markersObj[element.patent]);
+				//markersObj[element.patent].infoWindow.open(markersObj[element.patent].map, markersObj[element.patent]);
 				markersAdd.push(element.patent);
 
 
@@ -313,10 +328,10 @@ $(document).ready(function() {
 				allPatentsSearch.push({id: index, text: element.patent});
 
 				$("#search-patent").select2({
-					allowClear: true,
-					placeholder: "Seleccione una patente",
-					data: allPatentsSearch
-				});
+                    allowClear: true,
+                    placeholder: "Buscar patente",
+                    data: allPatentsSearch
+                });
 				
 			} else {
 
@@ -332,7 +347,7 @@ $(document).ready(function() {
 						$('#patentSelected').addClass('box-shadows-red');
 
 						setTimeout(function() {
-							$('#patentSelected').css('color', 'black');
+							$('#patentSelected').css('color', 'white');
 							$('#patentSelected').removeClass('box-shadows-red');
 							$('#patentSelected').addClass('box-shadows');
 						}, 2000);
@@ -353,7 +368,7 @@ $(document).ready(function() {
 						$('#patentSelected').addClass('box-shadows-green');
 
 						setTimeout(function() {
-							$('#patentSelected').css('color', 'black');
+							$('#patentSelected').css('color', 'white');
 							$('#patentSelected').removeClass('box-shadows-green');
 							$('#patentSelected').addClass('box-shadows');
 						}, 2000);
@@ -381,11 +396,293 @@ $(document).ready(function() {
 				Asignamos los datos de cada patente a un arreglo (en caso que ya exista se reemplaza).
 			*/
 			trucksData[element.patent] = element;
-		});
+        });
 
+    })
+    
+    /*
+		Socket Locks
+	*/
+	socket.on('locks', function(data){
+		allLockStatus = data;
+		getAllLockStatus();
 	})
-	
+
+
 });
+
+google.maps.Polygon.prototype.my_getBounds=function(){
+    var bounds = new google.maps.LatLngBounds()
+    this.getPath().forEach(function(element,index){bounds.extend(element)})
+    return bounds
+}
+
+
+function getAllLockStatus() {
+	//if ( toolsMenu == 1 ) {
+		locks = '';
+		allLockStatus.forEach(function(element, index) {
+            allLockData[element.patent] = { time: element.time, status: element.status }
+			if (selectedPatent == element.patent) {
+				if( element.status == 0 ) {
+
+                    selectedLockStatus = `
+                    <a style="color:white;" class="btn btn-danger btn-xs">
+                        Abierto <i class="fa fa-unlock fa-fw"></i>
+                    </a>
+					`;						
+
+					$('#securityLockStatus').html(selectedLockStatus);
+				} else {
+
+					selectedLockStatus = `
+					<a style="color:white;" class="btn btn-success btn-xs">
+                        Cerrado <i class="fa fa-lock fa-fw"></i>
+                    </a>
+					`;
+
+					$('#securityLockStatus').html(selectedLockStatus);
+				}
+			}
+
+			var lockStatus = '';
+			var tooltipClass = '';
+			if( element.status == 0 ) {
+				lockStatus = '<i style="color: #e74c3c" class="fa fa-unlock" aria-hidden="true"></i>';
+				tooltipClass = 'red-tooltip'
+			} else {
+				lockStatus = '<i style="color: #1abc9c" class="fa fa-lock" aria-hidden="true"></i>';
+				tooltipClass = 'green-tooltip'
+			}
+
+			locks += `<span onclick="handleSelectTruck('${element.patent}')" class="${tooltipClass}" data-toggle="tooltip" data-placement="top" title="${ moment(element.time).format('DD/MM/YYYY HH:mm:ss ') }" style="margin:5px; padding:2px; color:#bdc3c7; border:1px solid #bdc3c7; border-radius:5px; cursor: pointer;"> ${element.patent}: ${lockStatus}</span>`
+        });
+
+		$('#allLockStatus').html(locks)
+	//}
+	$('[data-toggle="tooltip"]').tooltip()
+}
+
+/*
+	Flecha que representa los camiones
+*/
+function changeIcon(color, track) { // flecha con dirección y color
+	var iconScale = 4;
+	return {
+		path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
+		scale: iconScale,
+        origin: new google.maps.Point(0, 0),
+        anchor: new google.maps.Point(iconScale / 2, iconScale / 2),
+		rotation: parseInt(track),
+		fillColor: color,
+		fillOpacity: 1,
+		strokeColor: color,
+		strokeWeight: 1
+	};
+}
+
+function handleSelectTruck(patent) {
+    selectTruck(trucksData[patent]);
+}
+
+function selectTruck(truckData) {
+    selectedPatent = truckData.patent;
+    cleanBlackPanel();
+    loadTruckMenu();
+
+	var point = chartSpeed.series[0].points[0];
+	point.update(truckData.speed);
+
+	centerZoom(truckData.lat, truckData.lng, 15)
+	$('#patentSelected').css('visibility', 'visible');
+	$('#patentSelected').html(`
+		<h2 style="margin-top:2px;">${truckData.patent}</h2>
+	`)
+}
+
+function addMapControls() {
+  $('#tools').html(`
+    <a style="z-index: 10; right: 0; position:fixed; top: 50px;" class="btn btn-blackbox-tool" id="toolsMenu" data-toggle="tooltip" data-placement="top" title="Herramientas">
+        <i class="fa fa-asterisk fa-2x" aria-hidden="true"></i>
+    </a>
+
+    <a style="z-index: 10; right: 0; position:fixed; top: 100px;" class="btn btn-blackbox-tool" id="loadAllLocks" data-toggle="tooltip" data-placement="top" title="Estados de las cerraduras">
+        <i class="fa fa-lock fa-2x" aria-hidden="true"></i>
+    </a>
+
+    <a style="z-index: 10; right: 0; position:fixed; top: 150px;" class="btn btn-blackbox-tool" id="createGeoZone" data-toggle="tooltip" data-placement="top" title="Crear Geozona">
+        <i class="fa fa-pencil-square-o fa-2x" aria-hidden="true"></i>
+    </a>
+
+    <a style="z-index: 10; right: 0; position:fixed; top: 200px;" class="btn btn-blackbox-tool" id="truckMenu" data-toggle="tooltip" data-placement="top" title="Herramientas del camión seleccionado">
+        <i class="fa fa-truck fa-2x" aria-hidden="true"></i>
+    </a>
+
+  `)
+  
+  $('[data-toggle="tooltip"]').tooltip()
+}
+
+/*
+	removedor de herramientas del mapa
+*/
+function removeControl(id) {
+	var control = null;
+	var allControls = map.controls;
+	allControls.forEach( function ( element, index ) {
+		if( element.id === id ) {
+			control = element;
+			map.removeControl(element)
+		}
+	});
+}
+
+function createGeoPoint(lat, lng) {
+	if ( creatingGeoZone == 1 ) {
+		if ( creatingGeoPoints.length == 0 ) {
+			var firstPoint = map.addMarker({
+				lat: lat,
+				lng: lng,
+                icon: markerIcon('firstPoint'),
+				optimized: false,
+				animation: google.maps.Animation.DROP,
+				infoWindow: {
+					content: "<b>Clic aquí para finalizar creación de geozona.</b>"
+				},
+				mouseover: function() {
+					this.infoWindow.open(this.map, this);
+				},
+				click: function() {
+                    //console.log(map.getZoom())
+                    if(creatingGeoPoints.length >= 3) {
+                        /*
+                            FALTA SELECCIONAR TIPO DE GEOZONA
+                        */
+                        swal({
+                            html: `
+                                <h2 style="color: #bdc3c7;">Nueva GeoZona</h2>
+                                <hr></hr>
+                                <input class="box-shadows" style='border-radius:3px; border: 1px solid #ecf0f1; padding: 0 12; text-align: center; width:80%; font-size:20px; height:40px;' id='newGeozoneName' type='text' placeholder="Nombre de la geozona">
+                            `,
+                            showCloseButton: true,
+                            showCancelButton: true,
+                            background: '#323232',
+                            confirmButtonColor: '#3085d6',
+                            cancelButtonColor: '#d33',
+                            confirmButtonText: 'Crear Geozona',
+                            cancelButtonText: 'Cancelar'
+                        }).then(function () {
+                            var newGeozoneName = $('#newGeozoneName').val();
+                            if( newGeozoneName.length > 2 ) {
+                                createGeoZone(newGeozoneName, 'secureZone', creatingGeoPoints);
+                            } else {
+                                toastr.warning('El nombre de la nueva geozona debe tener un mínimo de 3 caracteres.');
+                            }
+
+                        }, function (dismiss) {
+                            // dismiss can be 'cancel', 'overlay',
+                            // 'close', and 'timer'
+                            if (dismiss === 'cancel') {
+                                $('#createGeoZone').removeClass('btn-blackbox-tool-selected');
+                                $('#createGeoZone').addClass('btn-blackbox-tool');
+                                creatingGeoZone = 0;
+                                creatingGeoPoints = [];
+                                map.setOptions({styles: style2});
+                                mapObjectsRemover(objectsToRemove);
+
+                                toastr.warning('Creación de geozona cancelada.');
+
+                            } else if ( dismiss != 'cancel' ) {
+                                toastr.warning('Puede seguir creando la geozona.');
+                            }
+                        });
+
+                        $('#newGeozoneName').focus();       
+                    } else {
+                        toastr.warning('Necesita un mínimo de 3 puntos geográficos para crear una geozona');
+                    }
+
+				}
+            });
+			
+			objectsToRemove.push(firstPoint);
+			creatingGeoPoints.push([lat, lng]);
+		} else if ( creatingGeoPoints.length > 0 ) {
+			creatingGeoPoints.push([lat, lng])
+
+			var path = [
+				[
+					creatingGeoPoints[creatingGeoPoints.length-2][0], creatingGeoPoints[creatingGeoPoints.length-2][1]
+				],
+				[
+					creatingGeoPoints[creatingGeoPoints.length-1][0], creatingGeoPoints[creatingGeoPoints.length-1][1]
+				]
+			];
+
+			var creatingGeoPoly = map.drawPolyline({
+				path: path,
+				strokeColor: '#f1c40f',
+				strokeOpacity: 0.6,
+				strokeWeight: 6
+			});
+
+			objectsToRemove.push(creatingGeoPoly)	
+		}
+	}
+}
+
+/*
+	Creador de Markers. ej: primer punto al crear geozona
+*/
+function markerIcon(type) {
+	var iconSX = 24;
+	var iconSY = 24;
+	var iconURL = '';
+	if (type == 'firstPoint') {
+		iconURL = '/public/img/orangePoint.png'
+	} 
+	
+	return {
+		url: iconURL,
+		scaledSize: new google.maps.Size(iconSX, iconSY),
+		origin: new google.maps.Point(0, 0),
+		anchor: new google.maps.Point(iconSX / 2, iconSY / 2)
+	};
+	
+}
+
+/*
+	Centrar y/o hacer zoom dependiendo de las coordenadas y el numero de zoom
+*/
+function centerZoom(lat, lng, zoom) {
+	if (zoom) {
+		map.setCenter(lat, lng);
+		map.setZoom(zoom);
+	} else {
+		map.setCenter(lat, lng);
+	}
+}
+
+/*
+	mover vista panoramica dependiendo de las coordenadas 
+*/
+function movePanoramic(lat, lng, heading) {
+    var latlng = new google.maps.LatLng(lat, lng);
+    panoramicMap.setPosition(latlng);  
+    panoramicMap.setPov({ heading: 91.8, pitch: 0});  
+}
+
+/*
+	Redimensiona el alto del contenedor del mapa
+*/
+function resizeMapContainer() {
+	setTimeout(function() {
+		$('#map-container').css({
+			'height': $(window).height()
+        });
+    }, 100);
+    
+}
 
 /*
 	Agregar nueva geozona a base de datos
@@ -393,7 +690,7 @@ $(document).ready(function() {
 function createGeoZone(name, type, path) {
     var geoPath = path;
     var geoPathToString = JSON.stringify(geoPath);
-
+	$("div#divLoading").addClass('show');
     $.ajax({
 		url: '/api/geozones/newGeo',
 		type: 'POST',
@@ -443,6 +740,7 @@ function createGeoZone(name, type, path) {
 			});
 			
 			toastr.success('Geozona '+ data.nombre +' creada correctamente.');
+			$("div#divLoading").removeClass('show');
 
 			allGeozones[data.nombre] = {
 				id: data.id,
@@ -453,12 +751,12 @@ function createGeoZone(name, type, path) {
 				center: [geo.getBounds().getCenter().lat(), geo.getBounds().getCenter().lng()]
 			}
 							
-			$('#createGeoZone').css('color', '#333333');
+			$('#createGeoZone').removeClass('btn-blackbox-tool-selected');
+        	$('#createGeoZone').addClass('btn-blackbox-tool');
 			geozonesAdd.push(data.nombre)
 			creatingGeoZone = 0;
 			creatingGeoPoints = [];
 			map.setOptions({styles: style2});
-			removeControl('controlCreatingGeoZone');
 			mapObjectsRemover(objectsToRemove);
 
 			allGeozonesSearch.push({id: allGeozonesSearch.length, text: data.nombre});	
@@ -477,370 +775,404 @@ function createGeoZone(name, type, path) {
 	});
 }
 
-function getAllLockStatus() {
-	if ( toolsMenu == 1 ) {
-		locks = '';
-
-		allLockStatus.forEach(function(element, index) {
-
-			if (selectedPatent == element.patent) {
-				if( element.status == 0 ) {
-
-					selectedLockStatus = `
-						<center>
-							<a style="width:100%; height:150px;" class="btn btn-danger"> 
-								<p style="color:#222222">Estado de la</p>
-								<p style="color:#222222; margin-top:-15px;">cerradura</p>
-								<i class="fa fa-unlock fa-4x" style="color:#2c3e50" aria-hidden="true"></i>
-							</a>
-						</center>
-					`;						
-
-					$('#securityLockStatus').html(selectedLockStatus);
-				} else {
-
-					selectedLockStatus = `
-						<center>
-							<a style="width:100%; height:150px;" class="btn btn-success">
-								<p style="color:#222222">Estado de la</p>
-								<p style="color:#222222; margin-top:-15px;">cerradura</p>
-								<i class="fa fa-lock fa-4x" style="color:#2c3e50" aria-hidden="true"></i>
-							</a>
-						</center>
-					`;
-
-					$('#securityLockStatus').html(selectedLockStatus);
-				}
+function selectGeozone(geozone_name, geozoneObj) {
+	var inGeoPatents = '';
+	markersAdd.forEach(function(element, index) {
+		inGeoPatents += `<option id="opt${markersAdd[index]}" value="${markersAdd[index]}" >${markersAdd[index]}</option>`;
+	});
+	swal({
+		html: `
+		<h2 style="color:white;">${geozone_name}</h2>
+		<h4 style="color:white;">Seleccionar patentes autorizadas</h4>
+        <br>
+		<select placeholder="Seleccione las patentes autorizadas" style="width:200px" id="multipleSelector" multiple="multiple">
+			${inGeoPatents}
+		</select>
+		`,
+		showCloseButton: true,
+		showCancelButton: true,
+		background: '#323232',
+		confirmButtonColor: '#3085d6',
+		cancelButtonColor: '#d33',
+		confirmButtonText: 'Guardar',
+		cancelButtonText: 'Eliminar Geozona'
+	}).then(function () {
+		var geoPatents = $('#multipleSelector').val();
+		$("div#divLoading").addClass('show');
+		$.ajax({
+			url: '/api/geozones/setGeozonePatents',
+			type: 'POST',
+			data: { name: geozone_name, patents: JSON.stringify(geoPatents) }
+		})
+		.done(function(data) {
+			$("div#divLoading").removeClass('show');
+			if (data.ok) {
+				toastr.success('Geozona "'+geozone_name+'" Modificada correctamente');
 			}
-
-			var lockStatus = '';
-			var tooltipClass = '';
-			if( element.status == 0 ) {
-				lockStatus = '<i style="color: #e74c3c" class="fa fa-unlock" aria-hidden="true"></i>';
-				tooltipClass = 'red-tooltip'
-			} else {
-				lockStatus = '<i style="color: #1abc9c" class="fa fa-lock" aria-hidden="true"></i>';
-				tooltipClass = 'green-tooltip'
-			}
-
-			locks += `<span class="${tooltipClass}" data-toggle="tooltip" data-placement="top" title="${ moment(element.time).format('DD/MM/YYYY HH:mm:ss ') }" style="margin:2px; padding:2px; color:#bdc3c7; border:1px solid #bdc3c7; border-radius:5px;"> ${element.patent}: ${lockStatus}</span>`
+		})
+		.fail(function() {
+			$("div#divLoading").removeClass('show');
+			console.log("error modificando geozona");
 		});
-
-		$('#allLockStatus').html(locks)
-	}
-	$('[data-toggle="tooltip"]').tooltip()
-}
-
-function selectTruck(truckObj, truckData) {
-	selectedPatent = truckData.patent;
-	selectedLockStatus = '';
-	loadToolsMenu();
-	$('.inPatentSelectionOnly').css('visibility', 'visible');
-	$('.nav-tabs a[href="#truckTools"]').tab('show');
-	//resizeMapContainer();
-
-	var point = chartSpeed.series[0].points[0];
-	point.update(truckData.speed);
-
-	console.log(truckData);
-	
-
-	centerZoom(truckData.lat, truckData.lng, 17)
-	$('#patentSelected').css('visibility', 'visible');
-	$('#patentSelected').html(`
-		<h2 style="margin-top:2px;">${truckData.patent}</h2>
-	`)
-}
-
-function createGeoPoint(lat, lng) {
-	if ( creatingGeoZone == 1 ) {
-		if ( creatingGeoPoints.length == 0 ) {
-			var firstPoint = map.addMarker({
-				lat: lat,
-				lng: lng,
-				icon: markerIcon('firstPoint'),
-				optimized: false,
-				animation: google.maps.Animation.DROP,
-				infoWindow: {
-					content: "<b>Clic aquí para finalizar creación de geozona.</b>"
-				},
-				mouseover: function() {
-					this.infoWindow.open(this.map, this);
-				},
-				click: function() {
-					/*
-						FALTA SELECCIONAR TIPO DE GEOZONA
-					*/
-					swal({
-						html: `
-							<h2 style="color: #bdc3c7;">Nueva GeoZona</h2>
-							<hr></hr>
-							<input class="box-shadows" style='border-radius:3px; border: 1px solid #ecf0f1; padding: 0 12; text-align: center; width:80%; font-size:20px; height:40px;' id='newGeozoneName' type='text' placeholder="Nombre de la geozona">
-						`,
-						showCloseButton: true,
-						showCancelButton: true,
-						background: '#323232',
-						confirmButtonColor: '#3085d6',
-						cancelButtonColor: '#d33',
-						confirmButtonText: 'Crear Geozona',
-						cancelButtonText: 'Cancelar'
-					}).then(function () {
-						var newGeozoneName = $('#newGeozoneName').val();
-						if( newGeozoneName.length > 2 ) {
-
-							createGeoZone(newGeozoneName, 'secureZone', creatingGeoPoints);
-
-						} else {
-							toastr.warning('El nombre de la nueva geozona debe tener un mínimo de 3 caracteres.');
-						}
-
-					}, function (dismiss) {
-						// dismiss can be 'cancel', 'overlay',
-						// 'close', and 'timer'
-						if (dismiss === 'cancel') {
-							$('#createGeoZone').css('color', '#333333');
-							creatingGeoZone = 0;
-							creatingGeoPoints = [];
-							map.setOptions({styles: style2});
-							removeControl('controlCreatingGeoZone');
-							mapObjectsRemover(objectsToRemove);
-
-							toastr.warning('Creación de geozona cancelada.');
-
-						} else if ( dismiss != 'cancel' ) {
-							toastr.warning('Puede seguir creando la geozona.');
-						}
-					});
-
-					$('#newGeozoneName').focus();
+	}, function (dismiss) {
+		// dismiss can be 'cancel', 'overlay',
+		// 'close', and 'timer'
+		if (dismiss === 'cancel') {
+			$("div#divLoading").addClass('show');
+			$.ajax({
+				url: '/api/geozones/deleteGeo',
+				type: 'POST',
+				data: { name: geozone_name },
+			})
+			.done(function(data) {
+				$("div#divLoading").removeClass('show');
+				console.log(data);
+				if (data.ok) {
+					geozoneObj.setMap(null);
+					toastr.success('Geozona "'+geozone_name+'" Eliminada correctamente');
+				} else if (data.error) {
+					toastr.warning('Error al eliminar geozona '+geozone_name);
 				}
+			})
+			.fail(function() {
+				$("div#divLoading").removeClass('show');
+				console.log("error al eliminar geozona");
 			});
+		} else if ( dismiss != 'cancel' ) {
 			
-			objectsToRemove.push(firstPoint);
-			creatingGeoPoints.push([lat, lng]);
-		} else if ( creatingGeoPoints.length > 0 ) {
-			creatingGeoPoints.push([lat, lng])
-
-			var path = [
-				[
-					creatingGeoPoints[creatingGeoPoints.length-2][0], creatingGeoPoints[creatingGeoPoints.length-2][1]
-				],
-				[
-					creatingGeoPoints[creatingGeoPoints.length-1][0], creatingGeoPoints[creatingGeoPoints.length-1][1]
-				]
-			];
-
-			var creatingGeoPoly = map.drawPolyline({
-				path: path,
-				strokeColor: '#f1c40f',
-				strokeOpacity: 0.6,
-				strokeWeight: 6
-			});
-
-			objectsToRemove.push(creatingGeoPoly)	
 		}
-	}
-}
-
-/*
-	Creador de Markers. ej: primer punto al crear geozona
-*/
-function markerIcon(type) {
-	var iconSX = 24;
-	var iconSY = 24;
-	var iconURL = '';
-	if (type == 'firstPoint') {
-		iconURL = 'public/img/orangePoint.png'
-	} 
-	
-	return {
-		url: iconURL,
-		scaledSize: new google.maps.Size(iconSX, iconSY),
-		origin: new google.maps.Point(0, 0),
-		anchor: new google.maps.Point(iconSX / 2, iconSY / 2)
-	};
-	
-}
-
-/*
-	Centrar y/o hacer zoom dependiendo de las coordenadas y el numero de zoom
-*/
-function centerZoom(lat, lng, zoom) {
-	if (zoom) {
-		map.setCenter(lat, lng);
-		map.setZoom(zoom);
-	} else {
-		map.setCenter(lat, lng);
-	}
-}
-
-/*
-	Flecha que representa los camiones
-*/
-function changeIcon(color, track) { // flecha con dirección y color
-	var iconScale = 4;
-	return {
-		path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
-		scale: iconScale,
-        origin: new google.maps.Point(0, 0),
-        anchor: new google.maps.Point(iconScale / 2, iconScale / 2),
-		rotation: parseInt(track),
-		fillColor: color,
-		fillOpacity: 1,
-		strokeColor: color,
-		strokeWeight: 1
-	};
-}
-
-/*
-	Redimensiona el alto del contenedor del mapa
-*/
-function resizeMapContainer() {
-	setTimeout(function() {
-		$('#map-container').css({
-			'height': $(window).height()
-		});
-	}, 100);
-}
-
-/*
-	Cargar todas las herramientas
-*/
-function loadToolsMenu() {
-	var styleHidden = '';
-	var styleCentered = '';
-	var styleCreatingGeoZone = '';
-	var lockButton = '';
-
-	if( selectedPatent == '') {
-		styleHidden = 'style="visibility:hidden; height:0px;" '
-	}
-
-	if ( centered == 1 ) {
-		styleCentered = 'color: orange; '
-	}
-
-	if ( creatingGeoZone == 1 ) {
-		styleCreatingGeoZone = 'style="color: #1abc9c"'
-	}
-
-	if (selectedLockStatus != '') {
-		lockButton = selectedLockStatus;
-	} else { 
-		lockButton = `
-			<center>
-				<a style="width:100%; height:150px;" class="btn btn-default">
-					<p style="color:#222222">Estado de la</p>
-					<p style="color:#222222; margin-top:-15px;">cerradura</p>
-					<i style="color:#2c3e50" class="fa fa-circle-o-notch fa-spin fa-4x fa-fw"></i>
-				</a>
-			</center>
-		`
-	}
-
-	$('#toolsMenu').html(`
-	<div>
-
-		<!-- Nav tabs -->
-		<ul class="nav nav-tabs" role="tablist">
-			<li role="presentation" class="navTab active"><a href="#generalTools" aria-controls="generalTools" role="tab" data-toggle="tab">Herramientas Generales</a></li>
-			<li ${styleHidden} class="navTab inPatentSelectionOnly" role="presentation"><a href="#truckTools" aria-controls="truckTools" role="tab" data-toggle="tab">Herramientas del camión</a></li>
-			<li ${styleHidden} class="navTab inPatentSelectionOnly" role="presentation"><a href="#travelInfo" aria-controls="travelInfo" role="tab" data-toggle="tab">Información del viaje</a></li>
-		</ul>
-
-		<!-- Tab panes -->
-		<div class="tab-content" style="padding:30px;">
-
-			<div role="tabpanel" class="tab-pane active" id="generalTools">
-				<div class="row">
-					<div class="col-md-2 col-sm-3 col-xs-12">
-						<select style="width: 100%; margin-top: -10px" id="search-patent"><option></option></select> 
-						<select style="width: 100%; margin-top: -10px" id="search-geozone"><option></option></select>  
-					</div>
-					<div class="col-md-2 col-sm-3 col-xs-12">
-						<center>
-							<a id="createGeoZone" ${styleCreatingGeoZone} class="btn btn-default">
-								<h4><i class="fa fa-pencil-square-o" aria-hidden="true"></i> Crear Geozona</h4>
-							</a>	
-						</center>
-					</div>
-
-					<div style="background:#333435; border:1px solid #7f8c8d; padding:3px; border-radius:5px;" class="col-md-6 col-sm-3 col-xs-12">
-						<center><h3 style="color:#bdc3c7; margin-top:-5px;">Estado de todas las cerraduras</h3></center>
-						<center><div id="allLockStatus" style="width:100%;">${locks}</div></center>
-						
-					</div>
-
-				</div>
-			</div>
-
-			<div role="tabpanel" class="tab-pane" id="truckTools">
-				<div class="row">
-
-					<div class="col-md-1 col-sm-2 col-xs-12">
-						<div id="securityLockStatus" style="width: 100%; height: 150px;">
-							${lockButton}
-						</div>
-					</div>
-
-					<div class="col-md-1 col-sm-2 col-xs-12">
-						<div id="latestDate" class="box-shadows" style="background: #2ecc71;width: 100%; height: 150px;"></div>
-					</div>
-
-					<div class="col-md-2 col-sm-4 col-xs-12">
-						<center>
-							<div id="container-speed" style="width: 100%; height: 150px;"></div>
-						</center>
-					</div>
-
-					<div class="col-md-2 col-sm-4 col-xs-12">
-						<center>
-							<a id="centerTruck" style="margin-top:10px; ${styleCentered}" class="btn btn-default btn-block">
-								<h4><i class="fa fa-circle-o" aria-hidden="true"></i> Centrar Camión</h4>
-							</a>
-							
-							<a style="margin-top:10px;" class="btn btn-default btn-block">
-								<h4><i class="fa fa-road" aria-hidden="true"></i> Vista panorámica</h4>
-							</a>
-						</center>
-					</div>
-
-				</div>
-			</div>
-
-		</div>
-
-	</div>
-	`);
-
-	/* 
-		Buscador de patentes
-	*/
-	$("#search-patent").select2({
-		allowClear: true,
-		placeholder: "Seleccione una patente",
-		data: allPatentsSearch
+	});
+	$.ajax({
+		url: '/api/geozones/patentsInGeo',
+		type: 'POST',
+		data: { name: geozone_name },
+	})
+	.done(function(data) {
+		$('#multipleSelector').val(data).trigger('change');
+	})
+	.fail(function() {
+		console.log("error al obtener patentes de geozona");
 	});
 	
-	/* 
-		Buscador de geozonas
-	*/
-	$("#search-geozone").select2({
-		allowClear: true,
-		placeholder: "Seleccione una geozona",
-		data: allGeozonesSearch
-	});
+	$('#multipleSelector').select2({});
+}
 
-	$('#toolsMenuButton').html('<i class="fa fa-angle-double-down fa-4x" aria-hidden="true"></i>');
-	toolsMenu = 1;
+/*
+	removedor de objetos del mapa.
+*/
+function mapObjectsRemover(arr) { // remover del mapa los objetos del arreglo
+	for (var i = 0; i < arr.length; i++) {
+		arr[i].setMap(null);
+	}
+	objectsToRemove = [];
+}
 
-	chargeGauge();
-	//resizeMapContainer();
-	getAllLockStatus();
+function chargeBlackPanel(classes, head, body) {
+    $('#toolsWindow').css({display: 'inline'})
+    $('#toolsWindow').addClass('animated fadeInRight');
+    $('#toolsWindow').addClass(classes)
+    $('#blackPanelHeading').html(head);
+    $('#blackPanelBody').html(body);
+}
 
-	$('html, body').animate({
-        scrollTop: $('#toolsMenu').offset().top
+function cleanBlackPanelAnimation() {
+    $('#toolsWindow').addClass('animated fadeOutRight');
+    setTimeout(function() {
+        cleanBlackPanel();
     }, 300);
+}
+
+function cleanBlackPanel() {
+    $('#toolsWindow').css('display', 'none');
+    $('#toolsWindow').removeClass();
+    $('#blackPanelHeading').empty();
+    $('#blackPanelBody').empty();
+
+    /*
+        Quitar seleccion a los botones 
+    */
+    $('#toolsMenu').removeClass('btn-blackbox-tool-selected');
+    $('#toolsMenu').addClass('btn-blackbox-tool'); 
+
+    $('#truckMenu').removeClass('btn-blackbox-tool-selected');
+    $('#truckMenu').addClass('btn-blackbox-tool');
+
+    $('#loadAllLocks').removeClass('btn-blackbox-tool-selected');
+    $('#loadAllLocks').addClass('btn-blackbox-tool'); 
+    
+    toolsMenuStatus = 0;
+    truckMenuStatus = 0;
+    lockMenuStatus = 0;
+}
+
+function loadTruckMenu() {
+    if ( truckMenuStatus == 0 ) {
+        cleanBlackPanel();
+        $('#truckMenu').removeClass('btn-blackbox-tool');
+        $('#truckMenu').addClass('btn-blackbox-tool-selected');
+        
+        var isCenteredChecked = '';
+        var isPanoramicChecked = '';
+        var statusButton = '';
+
+        if ( centered == 1 ) {
+            isCenteredChecked = 'checked';
+        }
+
+        if ( panoramicStatus == 1 ) {
+            isPanoramicChecked = 'checked';
+        }
+
+        if (allLockData[selectedPatent].status == 1) {
+            statusButton = `
+                <a style="color:white;" class="btn btn-success btn-xs">
+                    Cerrado <i class="fa fa-lock fa-fw"></i>
+                </a>
+            `
+        } else {
+            statusButton = `
+                <a style="color:white;" class="btn btn-danger btn-xs">
+                    Abierto <i class="fa fa-unlock fa-fw"></i>
+                </a>
+            `
+        }
+
+        var truckTools = `
+        
+        <div style="padding: 10px;" class="row">
+
+            <div style="margin-bottom:7px;" class="col-md-12">
+                <center>
+                    <div id="container-speed" position:static; style="width: 100%; height:100px;"></div>
+                </center>
+            </div>
+
+            <div>
+                <span> Estado de la cerradura</span>
+                <span class="pull-right" id="securityLockStatus">
+                    ${statusButton}
+                </span>
+            </div>
+
+            <div style="margin-top:7px; margin-bottom:7px; height:1px; width:100%; background:rgba(255,255,255,0.3);"></div>
+
+            <div>
+                <span>Centrar camión</span>
+                <span class="pull-right">
+                    <input type="checkbox" id="centerStatus" ${isCenteredChecked}>
+                </span>
+            </div>
+
+            <div style="margin-top:7px; margin-bottom:7px; height:1px; width:100%; background:rgba(255,255,255,0.3);"></div>
+            
+            <div>
+                <span>Vista panorámica</span>
+                <span class="pull-right">
+                    <input type="checkbox" id="chargePanoramic" ${isPanoramicChecked}>
+                </span>
+            </div>
+
+            <div style="margin-top:10px;  margin-bottom:7px; height:1px; width:100%; background:rgba(255,255,255,0.3);"></div>
+
+            <div id="panoramicMap" style="width:100%; margin-bottom:7px;"></div>
+
+            <div id="latestDate" class="col-md-5 col-sm-5 col-xs-5" style="background:rgba(0, 0, 0, 0.6);">
+                <center>
+                    <div style="height:100px;">
+                        <div style="margin-top:50%;">
+                            <i class="fa fa-cog fa-spin fa-3x fa-fw"></i>
+                            <span class="sr-only">Loading...</span>
+                        </div>
+                    </div>
+                </center>
+            </div>
+        </div>
+       
+        `
+
+        chargeBlackPanel('col-md-4 col-sm-6 col-xs-11', `Herramientas de ${selectedPatent}`, truckTools);
+        chargeGauge();
+
+        /*
+            muestra el mapa panoramico en caso de que esté pre activada la herramienta de mapa panoramicoxx
+        */
+
+        if( panoramicStatus == 1 ) { 
+            $('#panoramicMap').height('250px')
+            var latlng = new google.maps.LatLng(-34.987030702, -71.237583160);
+            var panoOptions = {
+                position: latlng,
+                pov: {
+                    heading: 180,
+                    pitch: 0.5
+                }
+            };
+
+            panoramicMap = new google.maps.StreetViewPanorama(
+                document.getElementById('panoramicMap'), 
+                panoOptions
+            );
+
+            movePanoramic(trucksData[selectedPatent].lat, trucksData[selectedPatent].lng, trucksData[selectedPatent].track); 
+        }
+
+
+        $('#centerStatus').bootstrapSwitch({
+            size: 'mini',
+            onColor: 'success',
+            onSwitchChange: function() {
+                if ( centered == 1 ) {
+                    centered = 0;
+                    removeControl('controlCentered')
+                } else if ( centered == 0) {
+                    centered = 1;
+                    centerZoom(trucksData[selectedPatent].lat, trucksData[selectedPatent].lng);
+                    map.addControl({
+                        position: 'left_center',
+                        content: `<i style="color:orange" class="fa fa-circle-o fa-2x" aria-hidden="true"></i>`,
+                        id: 'controlCentered',
+                        style: {
+                            padding: '3px',
+                            height: '30px',
+                            width: '30px',
+                            backgroundColor: 'rgba(0, 0, 0, 0.4)'
+                        },
+                        events: {
+                            click: function(){
+                                if ( truckMenuStatus == 1 ) {
+                                    $("#toolsWindow").find('#centerStatus').trigger("click");
+                                } else if ( truckMenuStatus == 0 ) {
+                                    centered = 0;
+                                    removeControl('controlCentered');
+                                }
+                                
+                            }
+                        }
+                    });
+                }
+            }
+        });
+
+        $('#chargePanoramic').bootstrapSwitch({
+            size: 'mini',
+            onColor: 'success',
+            onSwitchChange: function() {
+                if ( panoramicStatus == 1 ) {
+                    panoramicStatus = 0;
+                    removeControl('controlPanoramic');
+                    $('#panoramicMap').height('0px');
+                    $('#panoramicMap').empty();
+                } else if ( panoramicStatus == 0) {
+                    panoramicStatus = 1;
+                    $('#panoramicMap').height('250px')
+
+                    var latlng = new google.maps.LatLng(-34.987030702, -71.237583160);
+                    var panoOptions = {
+                        position: latlng,
+                        pov: {
+                            heading: 180,
+                            pitch: 0.5
+                        }
+                    };
+
+                    panoramicMap = new google.maps.StreetViewPanorama(
+                        document.getElementById('panoramicMap'), 
+                        panoOptions
+                    );
+
+                    movePanoramic(trucksData[selectedPatent].lat, trucksData[selectedPatent].lng, trucksData[selectedPatent].track);    
+
+                    map.addControl({
+                        position: 'left_center',
+                        content: `<i style="color:orange" class="fa fa-eye fa-2x" aria-hidden="true"></i>`,
+                        id: 'controlPanoramic',
+                        style: {
+                            padding: '3px',
+                            height: '30px',
+                            width: '30px',
+                            backgroundColor: 'rgba(0, 0, 0, 0.4)'
+                        },
+                        events: {
+                            click: function(){
+                                if ( truckMenuStatus == 1 ) {
+                                    $("#toolsWindow").find('#chargePanoramic').trigger("click");
+                                } else if ( truckMenuStatus == 0 ) {
+                                    panoramicStatus = 0;
+                                    removeControl('controlPanoramic');
+                                }
+                                
+                            }
+                        }
+                    });
+                }
+            }
+        });
+
+        truckMenuStatus = 1;
+    } else if ( truckMenuStatus == 1 ) {
+        cleanBlackPanelAnimation();
+    }
+}
+
+function loadLocksMenu() {
+    if ( lockMenuStatus == 0 ) {
+        cleanBlackPanel();
+        $('#loadAllLocks').removeClass('btn-blackbox-tool');
+        $('#loadAllLocks').addClass('btn-blackbox-tool-selected');
+
+        var lockTools = `
+            <center><div id="allLockStatus" style="width:100%;">${locks}</div></center>
+        `
+
+        chargeBlackPanel('col-md-4 col-xs-11', 'Estado de todas las cerraduras', lockTools);
+        $('[data-toggle="tooltip"]').tooltip()
+        lockMenuStatus = 1;
+    } else if (lockMenuStatus == 1) {
+        cleanBlackPanelAnimation();
+    }
+}
+
+function loadToolsMenu() {
+    if ( toolsMenuStatus == 0 ) {
+        cleanBlackPanel();
+        $('#toolsMenu').removeClass('btn-blackbox-tool');
+        $('#toolsMenu').addClass('btn-blackbox-tool-selected');
+        
+        var generalTools = `
+        <div class="row">
+            <div class="col-md-6 col-xs-12">
+                <select style="width: 100%; margin-top: -10px" id="search-patent"><option></option></select>   
+            </div>
+            <div class="col-md-6 col-xs-12">
+                <select style="width: 100%; margin-top: -10px" id="search-geozone"><option></option></select>
+            </div>
+		</div>
+        `
+        
+        chargeBlackPanel('col-md-4 col-xs-11', 'Herramientas generales', generalTools);
+
+        /* 
+            Buscador de patentes
+        */
+        $("#search-patent").select2({
+            allowClear: true,
+            placeholder: "Buscar patente",
+            data: allPatentsSearch
+        });
+        
+        /* 
+            Buscador de geozonas
+        */
+        $("#search-geozone").select2({
+            allowClear: true,
+            placeholder: "Buscar geozona",
+            data: allGeozonesSearch
+        });
+
+        toolsMenuStatus = 1;
+    } else if ( toolsMenuStatus == 1 ) {
+        cleanBlackPanelAnimation();
+    }
 }
 
 /*
@@ -931,229 +1263,24 @@ function chargeGauge() {
 	
 }
 
-/*
-	Manu de herramientas ( control de estados )
-*/
-function toolsMenuFunc() {
-	if (toolsMenu == 0) {
-		loadToolsMenu();
-	} else if(toolsMenu == 1) {
-		$('#toolsMenu').empty();
-		$('#map-container').css({
-			'height': $(window).height()
-		});
-
-		$('#toolsMenuButton').html('<i class="fa fa-angle-double-up fa-4x" aria-hidden="true"></i>');
-		toolsMenu = 0;
-	}
-}
-
-/*
-	removedor de herramientas del mapa
-*/
-function removeControl(id) {
-	var control = null;
-	var allControls = map.controls;
-	allControls.forEach( function ( element, index ) {
-		if( element.id === id ) {
-			control = element;
-			map.removeControl(element)
-		}
-	});
-}
-
-/*
-	removedor de objetos del mapa.
-*/
-function mapObjectsRemover(arr) { // remover del mapa los objetos del arreglo
-	for (var i = 0; i < arr.length; i++) {
-		arr[i].setMap(null);
-	}
-	objectsToRemove = [];
-}
-
-function selectGeozone(geozone_name, geozoneObj) {
-	var inGeoPatents = '';
-
-	markersAdd.forEach(function(element, index) {
-		inGeoPatents += `<option id="opt${markersAdd[index]}" value="${markersAdd[index]}" >${markersAdd[index]}</option>`;
-	});
-
-	swal({
-		html: `
-		<h2 style="color:white;">${geozone_name}</h2>
-		<h4 style="color:white;">Seleccionar patentes autorizadas</h4>
-        <br>
-		<select placeholder="Seleccione las patentes autorizadas" style="width:200px" id="multipleSelector" multiple="multiple">
-			${inGeoPatents}
-		</select>
-		`,
-		showCloseButton: true,
-		showCancelButton: true,
-		background: '#323232',
-		confirmButtonColor: '#3085d6',
-		cancelButtonColor: '#d33',
-		confirmButtonText: 'Guardar',
-		cancelButtonText: 'Eliminar Geozona'
-	}).then(function () {
-		var geoPatents = $('#multipleSelector').val();
-
-		$.ajax({
-			url: '/api/geozones/setGeozonePatents',
-			type: 'POST',
-			data: { name: geozone_name, patents: JSON.stringify(geoPatents) }
-		})
-		.done(function(data) {
-			if (data.ok) {
-				toastr.success('Geozona "'+geozone_name+'" Modificada correctamente');
-			}
-		})
-		.fail(function() {
-			console.log("error modificando geozona");
-		});
-
-	}, function (dismiss) {
-		// dismiss can be 'cancel', 'overlay',
-		// 'close', and 'timer'
-		if (dismiss === 'cancel') {
-			$.ajax({
-				url: '/api/geozones/deleteGeo',
-				type: 'POST',
-				data: { name: geozone_name },
-			})
-			.done(function(data) {
-				console.log(data);
-				if (data.ok) {
-					geozoneObj.setMap(null);
-					toastr.success('Geozona "'+geozone_name+'" Eliminada correctamente');
-				} else if (data.error) {
-					toastr.warning('Error al eliminar geozona '+geozone_name);
-				}
-			})
-			.fail(function() {
-				console.log("error al eliminar geozona");
-			});
-		} else if ( dismiss != 'cancel' ) {
-			
-		}
-	});
-
-	$.ajax({
-		url: '/api/geozones/patentsInGeo',
-		type: 'POST',
-		data: { name: geozone_name },
-	})
-	.done(function(data) {
-		$('#multipleSelector').val(data).trigger('change');
-	})
-	.fail(function() {
-		console.log("error al obtener patentes de geozona");
-	});
-	
-	$('#multipleSelector').select2({});
-}
-
-/* INICIO EVENTOS */
-
-$('#toolsMenu').on('click', '#centerTruck', function() { // centrar camión
-	if (centered == 0) {
-		centerZoom(trucksData[selectedPatent].lat, trucksData[selectedPatent].lng);	
-		$('#centerTruck').css('color', 'orange');
-		centered = 1;
-
-		map.addControl({
-			position: 'right_center',
-			content: `<i style="color:orange" class="fa fa-circle-o fa-2x" aria-hidden="true"></i>`,
-			id: 'controlCentered',
-			style: {
-				padding: '3px',
-				height: '30px',
-				width: '30px',
-				backgroundColor: '#ecf0f1'
-			}
-		});
-
-	} else if ( centered == 1) {
-		$('#centerTruck').css('color', '#333333');
-		centered = 0;
-		removeControl('controlCentered')
-	}
-});
-
-$('#toolsMenu').on('click', '#createGeoZone', function(e) {
-	if(creatingGeoZone == 0) {
-		creatingGeoZone = 1;
-		$('#createGeoZone').css('color', '#1abc9c');
-		map.setOptions({styles: style1});
-
-		map.addControl({
-			position: 'right_center',
-			content: `<i style="color:#1abc9c" class="fa fa-pencil-square-o fa-2x" aria-hidden="true"></i>`,
-			id: 'controlCreatingGeoZone',
-			style: {
-				padding: '3px',
-				height: '30px',
-				width: '30px',
-				backgroundColor: '#ecf0f1'
-			}
-		});
-
-	} else if( creatingGeoZone == 1) {
-		$('#createGeoZone').css('color', '#333333');
-		creatingGeoZone = 0;
-		map.setOptions({styles: style2});
-		removeControl('controlCreatingGeoZone');
-		mapObjectsRemover(objectsToRemove);
-		creatingGeoPoints = [];
-	}
-	
-	console.log(creatingGeoZone);
-});
-
-
-$('#toolsMenu').on('click', 'a[data-toggle=tab]', function() {
-	//resizeMapContainer();
-	$('html, body').animate({
-        scrollTop: $('#toolsMenu').offset().top
-    }, 300);
-});
-
-
-$('#toolsMenu').on('click', '#securityLockStatus', function() {
-	toastr.warning('Cambio manual de estado de cerradura deshabilitado');
-
-	/*
-	$('#securityLockStatus').html(`
-		<a style="margin-left: 20px; margin-top:20px; width:100px;" class="btn btn-success"> 
-			<i class="fa fa-lock fa-4x" style="color:#2c3e50" aria-hidden="true"></i>
-		</a>
-	`);
-	*/
-});
-
-$('.menu-btn').on('click', function() {
-	$('#toolsMenu').empty();
-	$('#map-container').css({
-		'height': $(window).height()
-	});
-
-	$('#toolsMenuButton').html('<i class="fa fa-angle-double-up fa-4x" aria-hidden="true"></i>');
-	toolsMenu = 0;
+google.maps.event.addDomListener(window, "resize", function() { 
+	resizeMapContainer();
 });
 
 $('#searchDirection').on('keypress', function(event) {
-	if (event.keyCode == 13) {
-		GMaps.geocode({
-			address: $('#searchDirection').val(),
-			callback: function(results, status) {
-				if (status == 'OK') {
-					var latlng = results[0].geometry.location;
-					centerZoom(latlng.lat(), latlng.lng(), 15);
-				}
-			}
-		});
-	}
+    if (event.keyCode == 13) {
+        GMaps.geocode({
+            address: $('#searchDirection').val(),
+            callback: function(results, status) {
+                if (status == 'OK') {
+                    var latlng = results[0].geometry.location;
+                    centerZoom(latlng.lat(), latlng.lng(), 15);
+                }
+            }
+        });
+    }
 });
+
 
 $('#searchDirectionButton').on('click', function(event) {
 	GMaps.geocode({
@@ -1167,20 +1294,50 @@ $('#searchDirectionButton').on('click', function(event) {
 	});
 });
 
-google.maps.event.addDomListener(window, "resize", function() { 
-	resizeMapContainer();
+$('#tools').on('click', '#truckMenu', function(e) {
+    if (selectedPatent != '') {
+        loadTruckMenu();
+    } else {
+        toastr.warning('Para usar las herramientas del camión, primero seleccione un camión');
+    }
 });
 
-$('#toolsMenu').on('select2:select', '#search-patent', function(e) {
-	selectTruck(markersObj[e.params.data.text], trucksData[e.params.data.text]);
+$('#tools').on('click', '#toolsMenu', function(e) {
+    loadToolsMenu();
 });
 
-$('#toolsMenu').on('select2:select', '#search-geozone', function(e) {
+$('#tools').on('click', '#loadAllLocks', function(e) {
+    loadLocksMenu();
+});
+
+$('#tools').on('click', '#createGeoZone', function(e) {
+	if(creatingGeoZone == 0) {
+		creatingGeoZone = 1;
+        $('#createGeoZone').removeClass('btn-blackbox-tool');
+        $('#createGeoZone').addClass('btn-blackbox-tool-selected');        
+		map.setOptions({styles: style1});
+	} else if( creatingGeoZone == 1) {
+		$('#createGeoZone').removeClass('btn-blackbox-tool-selected');
+        $('#createGeoZone').addClass('btn-blackbox-tool');
+		creatingGeoZone = 0;
+		map.setOptions({styles: style2});
+		mapObjectsRemover(objectsToRemove);
+		creatingGeoPoints = [];
+	}
+});
+
+
+$('#toolsWindow').on('select2:select', '#search-patent', function(e) {
+	selectTruck(trucksData[e.params.data.text]);
+});
+
+$('#toolsWindow').on('select2:select', '#search-geozone', function(e) {
 	centerZoom(allGeozones[e.params.data.text].center[0], allGeozones[e.params.data.text].center[1], 17)
 });
 
 
-/* FIN EVENTOS */
+
+
 
 </script>
 {{/extend}}

@@ -16,25 +16,137 @@
     <!-- Bootstrap core CSS -->
 
     <link rel="stylesheet" href="https://bootswatch.com/yeti/bootstrap.min.css">
+    <link rel="stylesheet" href="/public/jquery-ui/jquery-ui.min.css">
     <link rel="stylesheet" href="public/css/pushy.css">
     <link rel="stylesheet" href="public/css/demo.css">
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.4/css/select2.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/limonte-sweetalert2/6.10.1/sweetalert2.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/bootstrap-switch@3.3.4/dist/css/bootstrap3/bootstrap-switch.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/css/toastr.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.4/css/select2.min.css">
     <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/dt/dt-1.10.16/b-1.4.2/r-2.2.0/rg-1.0.2/sc-1.4.3/sl-1.2.3/datatables.min.css"/>    
     <link rel="stylesheet" type="text/css" href="/public/css/bootstrap-slider.min.css">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Passion+One">
     <style>
+
         #map-container {
+            position: absolute;
+            top: 0;
+            left: 0;
             width: 100%;
-            z-index: 1;
+            height: 100%;
+            background: black; 
         }
 
-        #map {
-            z-index: 1;
+        #searchDirection {
+            height:37px;
+            background:rgba(0, 0, 0, 0.5);
+            color:white;
+            font-family: Roboto;
+            font-size: 15px;
+            font-weight: 300;
+            margin-left: 12px;
+            padding: 0 11px 0 13px;
+            text-overflow: ellipsis;
+            width: 200px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+            border: 1px solid transparent;
+            border-radius: 2px 0 0 2px;
+            outline: none;
         }
+
+        #searchDirection:focus {
+            box-shadow: 0 4px 8px 0 rgba(255, 255, 255, 0.3), 0 6px 20px 0 rgba(255, 255, 255, 0.3);
+        }
+
+        .box-shadows {
+            box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+        }
+        
+        .box-shadows-red {
+            box-shadow: 0 4px 8px 0 rgba(219, 48, 48, 0.2), 0 6px 20px 0 rgba(219, 48, 48, 0.2);
+        }
+    
+        .box-shadows-green {
+            box-shadow: 0 4px 8px 0 rgba(87, 240, 49, 0.2), 0 6px 20px 0 rgba(87, 240, 49, 0.2);
+        }
+
+        ::-webkit-input-placeholder { /* WebKit, Blink, Edge */
+            color: rgba(255, 255, 255, 0.7);
+        }
+        :-moz-placeholder { /* Mozilla Firefox 4 to 18 */
+            color: rgba(255, 255, 255, 0.7);
+            opacity:  1;
+        }
+        ::-moz-placeholder { /* Mozilla Firefox 19+ */
+            color: rgba(255, 255, 255, 0.7);
+        opacity:  1;
+        }
+        :-ms-input-placeholder { /* Internet Explorer 10-11 */
+            color: rgba(255, 255, 255, 0.7);
+        }
+        ::-ms-input-placeholder { /* Microsoft Edge */
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .btn-blackbox {
+            background: rgba(0, 0, 0, 0.5);
+            color: rgba(255, 255, 255, 0.7);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+            height: 36px;
+        }
+        .btn-blackbox:hover {
+            color: #ffffff;
+        }
+
+        .btn-blackbox-tool {
+            background: rgba(0, 0, 0, 0.5);
+            color: rgba(255, 255, 255, 0.8);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+            width: 52px;
+            padding:5px;
+        }
+        .btn-blackbox-tool:hover {
+            color: rgba(26, 188, 156,1.0);
+            background: rgba(0, 0, 0, 0.9);
+            width: 58px;
+        }
+
+        .btn-blackbox-tool-selected {
+            background: rgba(0, 0, 0, 0.5);
+            color: rgba(26, 188, 156,1.0);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+            width: 64px;
+            padding:5px;
+        }
+        .btn-blackbox-tool-selected:hover {
+            color: rgba(26, 188, 156,1.0);
+            background: rgba(0, 0, 0, 0.9);
+        }
+
+        .blackpanel {
+            margin-bottom: 20px;
+            background-color: rgba(0, 0, 0, 0.6);
+            -webkit-box-shadow: 0 1px 1px rgba(0, 0, 0, .05);
+                    box-shadow: 0 1px 1px rgba(0, 0, 0, .05);
+        }
+        .panel-blackbox {
+            border-color: rgba(0, 0, 0, 0.9);
+        }
+        .panel-blackbox > .panel-heading {
+            color: #ddd;
+            background-color: rgba(0, 0, 0, 0.9);
+            border-color: rgba(0, 0, 0, 0.9);
+        }
+        .panel-blackbox > .panel-body {
+            color: #ddd;
+            border-color: rgba(0, 0, 0, 0.9);
+        }
+
+        .red-tooltip + .tooltip > .tooltip-inner {background-color: #e74c3c;}
+        
+        .green-tooltip + .tooltip > .tooltip-inner {background-color: #1abc9c;}
 
         #divLoading {
             display : none;
@@ -44,9 +156,10 @@
             display : block;
             position : fixed;
             z-index: 100;
-            background-image : url('http://loadinggif.com/images/image-selection/3.gif');
+            background-image : url('http://isvoe.ru/wp-content/plugins/wppdf/images/loading.gif');
             background-color:#000;
-            opacity : 0.4;
+            background-size: 200px 200px;
+            opacity : 0.8;
             background-repeat : no-repeat;
             background-position : center;
             left : 0;
@@ -65,35 +178,6 @@
             margin-left : -16px;
             margin-top : -16px;
         }
-
-        .box-shadows {
-            box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
-        }
-
-        .tooltip-arrow,
-        .red-tooltip + .tooltip > .tooltip-inner {background-color: #e74c3c;}
-        
-        .tooltip-arrow,
-        .green-tooltip + .tooltip > .tooltip-inner {background-color: #1abc9c;}
-
-        #searchDirection {
-            height:37px;
-            background-color: #fff;
-            font-family: Roboto;
-            font-size: 15px;
-            font-weight: 300;
-            margin-left: 12px;
-            padding: 0 11px 0 13px;
-            text-overflow: ellipsis;
-            width: 200px;
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
-            border: 1px solid transparent;
-            border-radius: 2px 0 0 2px;
-            outline: none;
-        }
-        #searchDirection:focus {
-            border-color: #4d90fe;
-        }
     </style>
   
   {{#block "css"}}
@@ -102,27 +186,31 @@
 <body>
     <nav class="pushy pushy-left" data-focus="#first-link">	
         <div class="pushy-content"> 
-            
-            <div class="top-menu" style="background-color: #3498db;">
-
-            <span>
-                <img src="public/img/logo.png" style="width: 120px; height:75px; margin-top:20px !important; margin-left:10px;">
-                <!-- <i style="width:75px; height:75px; margin-top:20px !important; margin-left:20px;" class="fa fa-5x fa-user-circle-o" aria-hidden="true"></i> -->
-            </span>
-            <span>
-                <p style="color:white; margin-top:-60px; margin-left:130px; font-size:15px; text-transform: uppercase;">
-                    admin
-                </p>
-                <p style="color:white; margin-top:-10px; margin-left:130px; font-size:15px; text-transform: uppercase;">
-                    <b>Eduardo Reveco<b>
-                </p>
-            </span>
-            <br>
+            <div class="top-menu" style="background-color: rgba(54, 54, 54, 0.9);">
+                <a class="btn menu-btn box-shadows" style="margin-left:250px; position: fixed; z-index:3; padding:5px; width:40px;">
+                    <i class="fa fa-times" aria-hidden="true"></i>
+                </a>
+                
+                <span>
+                    <img src="public/img/logo.png" style="border-radius:5px; background:white; width: 120px; height:75px; margin-top:25px !important; margin-left:10px;">
+                    <!-- <i style="width:75px; height:75px; margin-top:20px !important; margin-left:20px;" class="fa fa-5x fa-user-circle-o" aria-hidden="true"></i> -->
+                </span>
+                <span>
+                    <p style="color:white; margin-top:-60px; margin-left:140px; font-size:15px; text-transform: uppercase;">
+                        admin
+                    </p>
+                    <p style="color:white; margin-top:-10px; margin-left:140px; font-size:15px; text-transform: uppercase;">
+                        <b>Eduardo Reveco<b>
+                    </p>
+                </span>
+                
+                <br>
     
             </div>
             <ul id="pushy-links">
-                <li class="pushy-link"><a href="/"><i class="fa fa-1x fa-home" aria-hidden="true"></i>&nbsp;&nbsp;&nbsp;&nbsp; Home</a></li>
+                <li class="pushy-link"><a href="/home"><i class="fa fa-1x fa-home" aria-hidden="true"></i>&nbsp;&nbsp;&nbsp;&nbsp; Home</a></li>
                 <li class="pushy-link"><a href="/config-sensors"><i class="fa fa-1x fa-thermometer-empty" aria-hidden="true"></i>&nbsp;&nbsp;&nbsp;&nbsp; Configurar Sensores</a></li>
+                <li class="pushy-link"><a href="/charts"><i class="fa fa-1x fa-line-chart" aria-hidden="true"></i>&nbsp;&nbsp;&nbsp;&nbsp; Visualizar gráficos</a></li>
             </ul>
 
             <div style="position:absolute; width:100%; bottom:0px; padding:0px;">   
@@ -144,11 +232,14 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.0.3/socket.io.js"></script>
     <script src="https://code.jquery.com/jquery-1.11.1.js"></script>
+    <script src="/public/jquery-ui/jquery-ui.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script> 
     <script src="public/js/pushy.js"></script>
     <script src="https://code.highcharts.com/highcharts.js"></script>
     <script src="https://code.highcharts.com/highcharts-more.js"></script>
+    <script src="https://code.highcharts.com/modules/exporting.js"></script>
     <script src="https://code.highcharts.com/modules/solid-gauge.js"></script>
+    <script src="/public/daterangepicker/daterangepicker.js"></script>
     <script src="public/js/highChartsDark.js"></script>	
     <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.4/js/select2.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/limonte-sweetalert2/6.10.1/sweetalert2.min.js"></script>
@@ -157,6 +248,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.18.1/locale/es.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.4/js/select2.min.js"></script>
     <script src="/public/js/bootstrap-slider.min.js"></script>
+    <script src="https://unpkg.com/bootstrap-switch@3.3.4/dist/js/bootstrap-switch.js"></script>
     <script src="https://cdn.datatables.net/v/dt/dt-1.10.16/b-1.4.2/r-2.2.0/rg-1.0.2/sc-1.4.3/sl-1.2.3/datatables.min.js"></script>
     <script src="public/js/mapStyles.js"></script>
     <script src="https://maps.google.com/maps/api/js?key=AIzaSyAzSBp9riwBBxtGG_EiS0xFy40hW7buXYo&libraries=places"></script>
